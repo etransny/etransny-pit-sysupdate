@@ -23,6 +23,10 @@ check_update(){
 }
 
 app=SYSUPDATE
+if [ "$(id -u)" != "0" ]; then
+	notify "Not root"
+	exit 1
+fi
 etver=$(cat /etc/etransver)
 updated=0
 case "$etver" in
@@ -58,11 +62,16 @@ case "$etver" in
   ;&
 20180330)
   notify "Updating to v.20180405"
-  service ntp disable
-  service ntp stop
+  apt-get remove -y ntp && apt-get purge -y ntp
+  if [ $? -ne 0 ]
+  then
+    notify "Update to v.20180405 failed - ntp remove"
+    exit 1
+  fi
   systemctl enable systemd-timesyncd
   systemctl start systemd-timesyncd
-  dpkg -l | grep sqlite3 > /dev/null
+  #is sqlite3 installed?
+  dpkg -l | grep -P ' sqlite3' > /dev/null
   if [ $? -ne 0 ]
   then
     check_update 20180405
@@ -81,10 +90,9 @@ case "$etver" in
       notify "Update to v.20180405 failed - cgps install"
       exit 1
     fi
-    chown root:root /usr/bin/cgps
     chmod +x /usr/bin/cgps
   fi
-  if [ ! -x /usr/bin/cgps ]
+  if [ ! -x /usr/bin/gpspipe ]
   then
     wget -q --no-cache -P /usr/bin https://storage.googleapis.com/etranspi-update/sysfiles/gpspipe
     if [ $? -ne 0 ]
@@ -92,11 +100,29 @@ case "$etver" in
       notify "Update to v.20180405 failed - gpspipe install"
       exit 1
     fi
-    chown root:root /usr/bin/gpspipe
     chmod +x /usr/bin/gpspipe
   fi  
-  
-  echo "20180330" > /etc/etransver
+  if [ ! -x /usr/local/bin/gpstimesync ]
+  then
+    wget -q --no-cache -P /usr/local/bin https://storage.googleapis.com/etranspi-update/sysfiles/gpstimesync
+    if [ $? -ne 0 ]
+    then
+      notify "Update to v.20180405 failed - gpstimesync install"
+      exit 1
+    fi
+    chown root:root /usr/local/bin/gpstimesync
+    chmod +x /usr/local/bin/gpstimesync
+    sed -i '/#cellular connection/i \ \ #gpstimesync\n  if [ -x /usr/local/bin/gpstimesync ]\n  then\n    \/usr\/local\/bin\/gpstimesync &\n  fi' /etc/rc.local
+  fi
+  updscr=$(wget --no-cache -qO- https://storage.googleapis.com/etranspi-update/home/app_update)
+  if [ $? -ne 0 ]
+  then
+    notify "Update to v.20180405 failed - app update script replace"
+    exit 1
+  fi
+  sudo -u etrans echo "$updscr" > /home/etrans/app_update
+  sudo -u etrans chmod +x /home/etrans/app_update
+  echo "20180405" > /etc/etransver
   ;;
 *)
   notify "Unknown local version: $etver. Exit"
