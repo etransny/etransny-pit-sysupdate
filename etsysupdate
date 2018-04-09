@@ -122,6 +122,7 @@ case "$etver" in
   fi
   sudo -u etrans echo "$updscr" > /home/etrans/app_update
   sudo -u etrans chmod +x /home/etrans/app_update
+  sed -i '/logger -t MODEM $result/a \ \ sleep 10' /usr/local/bin/xgconn
   echo "20180405" > /etc/etransver
   ;;
 *)
