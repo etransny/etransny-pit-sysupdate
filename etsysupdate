@@ -75,7 +75,7 @@ case "$etver" in
   if [ $? -ne 0 ]
   then
     check_update 20180405
-    apt-get install sqlite3
+    apt-get install -y sqlite3
     if [ $? -ne 0 ]
     then
       notify "Update to v.20180405 failed - sqlite3 install"
