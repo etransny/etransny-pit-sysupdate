@@ -30,100 +30,16 @@ fi
 etver=$(cat /etc/etransver)
 updated=0
 case "$etver" in
-20180322)
-  notify "Updating to v.20180328"
-  check_update 20180328
-  apt-get install -y ntp pps-tools
-  if [ $? -eq 0 ]
-  then
-    systemctl disable systemd-timesyncd
-    systemctl stop systemd-timesyncd
-    file="/etc/ntp.conf"
-    echo -e "# GPS Serial data reference (NTP0)" >> $file
-    echo -e "server 127.127.28.0 minpoll 4 maxpoll 4" >> $file
-    echo -e "fudge 127.127.28.0 refid GPS\n" >> $file
-    echo -e "# GPS PPS reference (NTP1)" >> $file
-    echo -e "server 127.127.28.1 minpoll 4 maxpoll 4 prefer" >> $file
-    echo -e "fudge 127.127.28.1 refid PPS" >> $file
-    service ntp restart
-    echo "20180328" > /etc/etransver
-    notify "Updated to v.20180328"
-  else
-    notify "Update to v.20180328 failed - ntp install"
-    exit 1
-  fi
+20180505)
+#  does not exist, just for fallthrough
+#  notify "Updating to v.20180606"
+#  check_update 20180606
+#  echo "20180606" > /etc/etransver
   ;&
-20180328)
-  notify "Updating to v.20180330"
-  sed -i -- 's/GPSD_OPTIONS=""/GPSD_OPTIONS="-n"/g' /etc/default/gpsd
-  service gpsd restart
-  echo "20180330" > /etc/etransver
-  notify "Updated to v.20180330"
-  ;&
-20180330)
-  notify "Updating to v.20180405"
-  apt-get remove -y ntp && apt-get purge -y ntp
-  if [ $? -ne 0 ]
-  then
-    notify "Update to v.20180405 failed - ntp remove"
-    exit 1
-  fi
-  systemctl enable systemd-timesyncd
-  systemctl start systemd-timesyncd
-  #is sqlite3 installed?
-  dpkg -l | grep -P ' sqlite3' > /dev/null
-  if [ $? -ne 0 ]
-  then
-    check_update 20180405
-    apt-get install -y sqlite3
-    if [ $? -ne 0 ]
-    then
-      notify "Update to v.20180405 failed - sqlite3 install"
-      exit 1
-    fi
-  fi
-  if [ ! -x /usr/bin/cgps ]
-  then
-    wget -q --no-cache -P /usr/bin https://storage.googleapis.com/etranspi-update/sysfiles/cgps
-    if [ $? -ne 0 ]
-    then
-      notify "Update to v.20180405 failed - cgps install"
-      exit 1
-    fi
-    chmod +x /usr/bin/cgps
-  fi
-  if [ ! -x /usr/bin/gpspipe ]
-  then
-    wget -q --no-cache -P /usr/bin https://storage.googleapis.com/etranspi-update/sysfiles/gpspipe
-    if [ $? -ne 0 ]
-    then
-      notify "Update to v.20180405 failed - gpspipe install"
-      exit 1
-    fi
-    chmod +x /usr/bin/gpspipe
-  fi  
-  if [ ! -x /usr/local/bin/gpstimesync ]
-  then
-    wget -q --no-cache -P /usr/local/bin https://storage.googleapis.com/etranspi-update/sysfiles/gpstimesync
-    if [ $? -ne 0 ]
-    then
-      notify "Update to v.20180405 failed - gpstimesync install"
-      exit 1
-    fi
-    chown root:root /usr/local/bin/gpstimesync
-    chmod +x /usr/local/bin/gpstimesync
-    sed -i '/#cellular connection/i \ \ #gpstimesync\n  if [ -x /usr/local/bin/gpstimesync ]\n  then\n    \/usr\/local\/bin\/gpstimesync &\n  fi' /etc/rc.local
-  fi
-  updscr=$(wget --no-cache -qO- https://storage.googleapis.com/etranspi-update/home/app_update)
-  if [ $? -ne 0 ]
-  then
-    notify "Update to v.20180405 failed - app update script replace"
-    exit 1
-  fi
-  sudo -u etrans echo "$updscr" > /home/etrans/app_update
-  sudo -u etrans chmod +x /home/etrans/app_update
-  sed -i '/logger -t MODEM $result/a \ \ sleep 10' /usr/local/bin/xgconn
-  echo "20180405" > /etc/etransver
+20180613)
+  notify "Updating to v.20180911"
+  check_update 20180911
+  apt-get install -y pigpio python-pigpio python3-pigpio && sed -i -- 's/pigpiod -l/pigpiod/g' /lib/systemd/system/pigpiod.service && systemctl enable pigpiod.service && systemctl start pigpiod.service && sed -i -- 's/20180613/20180911/g' /etc/etransver  
   ;;
 *)
   notify "Unknown local version: $etver. Exit"
