@@ -39,7 +39,22 @@ case "$etver" in
 20180613)
   notify "Updating to v.20180911"
   check_update 20180911
-  apt-get install -y pigpio python-pigpio python3-pigpio && sed -i -- 's/pigpiod -l/pigpiod/g' /lib/systemd/system/pigpiod.service && systemctl enable pigpiod.service && systemctl start pigpiod.service && sed -i -- 's/20180613/20180911/g' /etc/etransver  
+  apt-get install -y pigpio python-pigpio python3-pigpio && sed -i -- 's/pigpiod -l/pigpiod/g' /lib/systemd/system/pigpiod.service && systemctl enable pigpiod.service && systemctl start pigpiod.service && sed -i -- 's/20180613/20180911/g' /etc/etransver
+  ;&
+20180911)
+  newVer="20181005"
+  myVal=$(cat /proc/cpuinfo | grep -Po '([0-9,a-f]{16})')
+  if [ "0000000019438c0c1" = "$myVal" ]
+  then
+    check_update "$newVer"
+    sed -i -- 's/maxfail 3/maxfail 5/g' /usr/local/bin/xgconn
+    gpsScript=$(wget --no-cache -qO- https://storage.googleapis.com/etranspi-update/sysfiles/syncByGps) && echo "$gpsScript" > /usr/local/bin/gpstimesync
+    apt-get install -y ntpdate
+    if [ $? -eq 0 ]
+    then
+      wget -P /usr/local/bin/ https://storage.googleapis.com/etranspi-update/sysfiles/syncByNtp && chmod +x /usr/local/bin/syncByNtp && sed -i '7 a syncByNtp &' /usr/local/bin/etupdate && systemctl stop systemd-timesyncd.service && systemctl disable systemd-timesyncd.service && sed -i -- 's/20180911/20181005/g' /etc/etransver
+    fi
+  fi
   ;;
 *)
   notify "Unknown local version: $etver. Exit"
