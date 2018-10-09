@@ -46,8 +46,8 @@ case "$etver" in
   notify "Updating to $newVer"
 #  check_update $newVer
   myVal=$(cat /proc/cpuinfo | grep -Po '([0-9,a-f]{16})')
-  if [ "0000000019438c0c" = "$myVal" ]
-  then
+  #if [ "0000000019438c0c" = "$myVal" ]
+  #then
     check_update "$newVer"
     sed -i -- 's/maxfail 3/maxfail 5/g' /usr/local/bin/xgconn
     tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/syncByGps) && echo "$tmpScript" > /usr/local/bin/gpstimesync
@@ -58,8 +58,8 @@ case "$etver" in
       tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/rc.local) && echo "$tmpScript" > /etc/rc.local
       sed -i -- 's/20180911/20181005/g' /etc/etransver
     fi
-  fi
-  exit 64
+  #fi
+  #exit 64
   ;;
 *)
   notify "Unknown local version: $etver. Exit"
