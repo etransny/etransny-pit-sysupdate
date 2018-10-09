@@ -1,0 +1,22 @@
+#!/bin/bash
+
+#fork!!! uses blocking functions!
+
+syncFlag="/tmp/timeSynced"
+while true
+do
+  systemctl stop systemd-timesyncd.service && ntpdate -s pool.ntp.org
+  if [ $? -eq 0 ]
+  then
+    logger -t NTPSYNC "Time Sync success"
+    if [ ! -e "$syncFlag" ]
+    then
+      touch "$syncFlag"
+      send2port 41000 timeSynced
+    fi
+    systemctl start systemd-timesyncd.service
+    break
+  else
+    sleep 5
+  fi
+done

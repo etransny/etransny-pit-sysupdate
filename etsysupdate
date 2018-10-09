@@ -50,11 +50,11 @@ case "$etver" in
   then
     check_update "$newVer"
     sed -i -- 's/maxfail 3/maxfail 5/g' /usr/local/bin/xgconn
-    gpsScript=$(wget --no-cache -qO- https://storage.googleapis.com/etranspi-update/sysfiles/syncByGps) && echo "$gpsScript" > /usr/local/bin/gpstimesync
+    gpsScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/syncByGps) && echo "$gpsScript" > /usr/local/bin/gpstimesync
     apt-get install -y ntpdate
     if [ $? -eq 0 ]
     then
-      wget -P /usr/local/bin/ https://storage.googleapis.com/etranspi-update/sysfiles/syncByNtp && chmod +x /usr/local/bin/syncByNtp && sed -i '7 a syncByNtp &' /usr/local/bin/etupdate && systemctl stop systemd-timesyncd.service && systemctl disable systemd-timesyncd.service && sed -i -- 's/20180911/20181005/g' /etc/etransver
+      wget -P /usr/local/bin/ https://raw.githubusercontent.com/D2Edev/et2/master/syncByNtp && chmod +x /usr/local/bin/syncByNtp && sed -i '7 a syncByNtp &' /usr/local/bin/etupdate && systemctl stop systemd-timesyncd.service && systemctl disable systemd-timesyncd.service && sed -i -- 's/20180911/20181005/g' /etc/etransver
     fi
   fi
   ;;

@@ -1,0 +1,51 @@
+#!/bin/bash
+
+#TPV contains i.e. 2018-04-05T11:40:07.000Z
+#fork, as it's blocking!
+syncFlag="/tmp/timeSynced"
+gpsTimeString=;
+MAXDELTA=5;
+count=0;
+while true
+do
+  sleep 1;
+  (( count++ ))
+  echo "Data retrieve cycle: $count"
+  gpsTimeString=$(gpspipe 127.0.0.1:2947 -w -n 5 | grep TPV | grep -m 1 time)
+  if [ -n "$gpsTimeString" ]
+  then
+    gpsDT=$(echo "$gpsTimeString" | sed -r 's/.*"time":"([^"]*)".*/\1/')
+    locDT="$(date -u +%Y-%m-%dT%T).000Z"
+    secGPS=$(date +%s --date="$gpsDT")
+    secLOC=$(date +%s --date="$locDT")
+    message="UTC datetime: GPS $gpsDT  / Local $locDT"
+    logger -t GPSTIMESYNC $message
+    #echo $message
+    deltaT=$((secGPS - secLOC))
+    if [ $deltaT -lt 0 ]
+    then
+      deltaT=$((-deltaT))
+    fi
+    if [ $deltaT -gt $MAXDELTA ]
+    then
+      logger -t GPSTIMESYNC "Local vs GPS times differ by $deltaT sec(s), sync needed"
+      #echo "delta is $deltaT sync needed"
+      date --set="$gpsDT"
+      if [ $? -eq 0 ]
+      then
+        logger -t GPSTIMESYNC "Time Sync success"
+        if [ ! -e "$syncFlag" ]
+        then
+          touch "$syncFlag"
+          send2port 41000 timeSynced
+        fi
+        break
+      fi
+    else
+        echo "delta is $deltaT sync NOT needed"
+      logger -t GPSTIMESYNC "Local vs GPS times differs by $deltaT sec(s), sync skipped"
+    fi
+    break
+  fi
+done
+
