@@ -38,6 +38,10 @@ do
         then
           touch "$syncFlag"
           send2port 41000 timeSynced
+          if [ -x /home/etrans/etrans/app_start ]
+          then
+            sudo -u etrans /home/etrans/etrans/./app_start
+          fi
         fi
         break
       fi

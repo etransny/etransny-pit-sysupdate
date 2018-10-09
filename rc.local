@@ -1,0 +1,55 @@
+#!/bin/sh -e
+#
+# rc.local
+#
+# This script is executed at the end of each multiuser runlevel.
+# Make sure that the script will "exit 0" on success or any other
+# value on error.
+#
+# In order to enable or disable this script just change the execution
+# bits.
+#
+# By default this script does nothing.
+
+# Prints IP address
+_IP=$(hostname -I) || true
+if [ "$_IP" ]; then
+  printf "My IP address is %s\n" "$_IP"
+fi
+
+
+#check if fs expansion needed
+expFile=/boot/expand;
+if [ -f $expFile ];
+then
+	echo "First run, fs expansion needed... wait"	
+	logger -t EXP_CHECK "First run, fs expansion needed"
+	raspi-config --expand-rootfs
+	#read -n1 -r -p "fs expand finished..." key
+	echo "fs expand finished... rebooting"
+	rm $expFile
+	shutdown -r now
+	exit 0
+else
+  #gpstimesync
+  if [ -x /usr/local/bin/gpstimesync ]
+  then
+    /usr/local/bin/gpstimesync &
+  fi
+  #cellular connection
+  if [ -x /usr/local/bin/xgconn ]
+  then
+    /usr/local/bin/xgconn &
+  fi
+  if [ -x /usr/local/bin/etupdate ]
+  then
+    /usr/local/bin/etupdate &
+  fi
+  #if [ -x /home/etrans/etrans/app_start ]
+  #then
+  #  sudo -u etrans /home/etrans/etrans/./app_start
+  #fi
+fi
+
+exit 0
+
