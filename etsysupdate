@@ -59,7 +59,7 @@ case "$etver" in
       sed -i -- 's/20180911/20181005/g' /etc/etransver
     fi
   #fi
-  #exit 64
+  exit 64
   ;;
 *)
   notify "Unknown local version: $etver. Exit"
