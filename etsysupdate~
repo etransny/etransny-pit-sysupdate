@@ -43,10 +43,8 @@ case "$etver" in
   ;&
 20180911)
   newVer="20181005"
-  notify "Updating to $newVer"
-#  check_update $newVer
   myVal=$(cat /proc/cpuinfo | grep -Po '([0-9,a-f]{16})')
-  if [ "0000000019438c0c" = "$myVal" ]
+  if [ "0000000019438c0c1" = "$myVal" ]
   then
     check_update "$newVer"
     sed -i -- 's/maxfail 3/maxfail 5/g' /usr/local/bin/xgconn
