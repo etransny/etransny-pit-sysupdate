@@ -51,6 +51,27 @@ case "$etver" in
   exit 64
 # no fallthru here 
   ;;
+20180606)
+  myVal=$(cat /proc/cpuinfo | grep -Po '([0-9,a-f]{16})')
+  #if [ "0000000019438c0c" = "$myVal" ]
+  #then
+    newVer="20181002"
+    notify "Updating to $newVer"
+    check_update "$newVer"
+    apt-get install -y pigpio python-pigpio python3-pigpio ntpdate
+    if [ $? -eq 0 ]
+    then
+      sed -i -- 's/pigpiod -l/pigpiod/g' /lib/systemd/system/pigpiod.service && systemctl enable pigpiod.service && systemctl start pigpiod.service
+      sed -i -- 's/maxfail 3/maxfail 5/g' /usr/local/bin/xgconn
+      tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/syncByGps) && echo "$tmpScript" > /usr/local/bin/gpstimesync
+      wget -P /usr/local/bin/ https://raw.githubusercontent.com/D2Edev/et2/master/syncByNtp && chmod +x /usr/local/bin/syncByNtp && sed -i '7 a syncByNtp &' /usr/local/bin/etupdate && systemctl stop systemd-timesyncd.service && systemctl disable systemd-timesyncd.service
+      tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/rc.local) && echo "$tmpScript" > /etc/rc.local
+      echo "$newVer" > /etc/etransver
+    fi
+  #fi
+  exit 64
+# no fallthru here 
+  ;;
 20180613)
   notify "Updating to v.20180911"
   check_update 20180911
