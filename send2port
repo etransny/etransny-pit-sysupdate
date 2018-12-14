@@ -15,7 +15,7 @@ else
   port="$1"
   # cuts fisrt word which is port number from string
   commnd=$(echo "$*" | cut -d " " -f2- )
-  echo "port $port cmd $commnd"
+  #echo "port $port cmd $commnd"
 	if [ $(nc -z localhost "$port")$? -eq 0 ]
 	then
 			exec 4<>/dev/tcp/localhost/"$port"
