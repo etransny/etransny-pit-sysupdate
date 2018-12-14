@@ -110,6 +110,7 @@ case "$etver" in
   tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/96-usb3g4gmodem.rules) && echo "$tmpScript" > /lib/udev/rules.d/96-usb3g4gmodem.rules
   sed -i -- 's/DEVICES="\/dev\/gps0"/DEVICES=""/g' /etc/default/gpsd
   sed -i -- 's/#dtparam=i2c_arm=on/dtparam=i2c_arm=on/g' /boot/config.txt
+  ;;
 *)
   notify "Unknown local version: $etver. Exit"
   exit 1  
