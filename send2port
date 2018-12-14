@@ -1,0 +1,28 @@
+#!/bin/bash
+#this script is intended to inform registered listeners in etrans
+#modules about some changes in system
+#pls refer to modules configuration for ports clarification
+#pls refer to module(s) description for supported list of
+#receivers and commands
+# send2port 41000 to:cam ack:true cmd:getVideoPeriod data:{\"date\":\"12/12/2018\"}
+#
+instructions="Usage: send2port PORT_NUMBER [cmd] [paramX:valueX]\ni.e. 'send2port 4500 stop'\n - sends 'stop' to ALL receivers\nor 'send2port 4500 get_module to:cam.cmanager'\n - sends event 'get_module' to subcomponent 'cmanager' of module 'cam'\n"
+
+if [ -z "$1" ] || [ -z "$2" ]
+then
+	echo -en "$instructions"
+else
+  port="$1"
+  # cuts fisrt word which is port number from string
+  commnd=$(echo "$*" | cut -d " " -f2- )
+  echo "port $port cmd $commnd"
+	if [ $(nc -z localhost "$port")$? -eq 0 ]
+	then
+			exec 4<>/dev/tcp/localhost/"$port"
+			echo "$commnd" >&4
+	else
+		logger -t SEND2PORT "Port $1 is closed"
+		echo " $(date +%Y-%m-%d_%H:%M:%S) Port $1 is closed"
+	fi
+fi
+
