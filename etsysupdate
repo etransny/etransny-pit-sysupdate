@@ -97,6 +97,20 @@ case "$etver" in
     exit 64
   # no fallthru here 
     ;;
+   20181001)
+    newVer="20181201"
+    notify "Updating to $newVer"
+    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/send2port) && echo "$tmpScript" > /usr/local/bin/send2port && chmod +x /usr/local/bin/send2port && echo "$newVer" > /etc/etransver 
+    exit 0
+  # no fallthru here 
+    ;;
+   20181002)
+    newVer="20181202"
+    notify "Updating to $newVer"
+    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/send2port) && echo "$tmpScript" > /usr/local/bin/send2port && chmod +x /usr/local/bin/send2port && echo "$newVer" > /etc/etransver 
+    exit 0
+  # no fallthru here 
+    ;;
   20181005)
     #myVal=$(cat /proc/cpuinfo | grep -Po '([0-9,a-f]{16})')
     #if [ "00000000aee84a62" != "$myVal" ]
