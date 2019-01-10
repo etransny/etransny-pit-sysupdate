@@ -1,0 +1,13 @@
+[Unit]
+Description=EtransShield check service
+After=pigpiod.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+ExecStart=/usr/local/bin/shieldcheck
+StandardOutput=journal
+
+[Install]
+WantedBy=multi-user.target
+

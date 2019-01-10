@@ -112,11 +112,6 @@ case "$etver" in
   # no fallthru here 
     ;;
   20181005)
-    #myVal=$(cat /proc/cpuinfo | grep -Po '([0-9,a-f]{16})')
-    #if [ "00000000aee84a62" != "$myVal" ]
-    #then
-    #  exit 0
-    #fi
     newVer="20181214"
     notify "Updating to $newVer"
     apt-get install -y i2c-tools
@@ -125,6 +120,60 @@ case "$etver" in
     sed -i -- 's/DEVICES="\/dev\/gps0"/DEVICES=""/g' /etc/default/gpsd
     sed -i -- 's/#dtparam=i2c_arm=on/dtparam=i2c_arm=on/g' /boot/config.txt
     echo "$newVer" > /etc/etransver
+    # fallthru
+    ;&
+  20181214)
+    myVal=$(cat /proc/cpuinfo | grep -Po '([0-9,a-f]{16})')
+    if [ "00000000aee84a62" != "$myVal" ]
+    then
+      exit 0
+    fi
+    newVer="20190110"
+    notify "Updating to $newVer"
+    # switch to wpa_supplicant as wifi manager
+    mkdir /usr/local/conf
+    chown etrans:etrans /usr/local/conf
+    sudo -u etrans chmod 775 /usr/local/conf
+    sudo -u etrans mkdir /usr/local/conf/wpa_supplicant
+    mv /etc/wpa_supplicant/wpa_supplicant.conf /usr/local/conf/wpa_supplicant
+    echo -e "\n\nnetwork={" >> /usr/local/conf/wpa_supplicant/wpa_supplicant.conf
+    echo -e "mode=2" >> /usr/local/conf/wpa_supplicant/wpa_supplicant.conf
+    cpuid=$(cat /proc/cpuinfo | grep -Po '([0-9abcdef]{16})')
+    echo -e "ssid=\"PiAP_$cpuid\"" >> /usr/local/conf/wpa_supplicant/wpa_supplicant.conf
+    echo "psk=\"4321oleg\"" >> /usr/local/conf/wpa_supplicant/wpa_supplicant.conf
+    echo "key_mgmt=WPA-PSK" >> /usr/local/conf/wpa_supplicant/wpa_supplicant.conf
+    echo "frequency=2437" >> /usr/local/conf/wpa_supplicant/wpa_supplicant.conf
+    echo "}" >> /usr/local/conf/wpa_supplicant/wpa_supplicant.conf
+    chown etrans:etrans /usr/local/conf/wpa_supplicant/wpa_supplicant.conf
+    sudo -u etrans chmod 775 /usr/local/conf/wpa_supplicant/wpa_supplicant.conf
+    cd /etc/wpa_supplicant
+    ln -s /usr/local/conf/wpa_supplicant/wpa_supplicant.conf
+    systemctl disable hostapd.service
+    systemctl stop hostapd.service
+    # update messaging
+    sed -i -- 's/mstate connected/mstate to:services.modem data:connected/g' /etc/ppp/ip-up.d/3g_conn
+    sed -i -- 's/mstate disconnected/mstate to:services.modem data:disconnected/g' /etc/ppp/ip-down.d/3g_dconn
+    # tune routing
+    sed -i '/routers=192.168.3.1/d' /etc/dhcpcd.conf
+    sed -i '/domain_name_servers=8.8.8.8/d' /etc/dhcpcd.conf
+    sed -i '/route add/d' /etc/ppp/ip-up.d/3g_conn
+    sed -i -- 's/#sudo ip/ip/g' /etc/ppp/ip-up.d/3g_conn
+    sed -i '/iptables/d' /etc/ppp/ip-down.d/3g_dconn
+    echo "iptables -t nat -D POSTROUTING -o ppp0 -j MASQUERADE" >> /etc/ppp/ip-down.d/3g_dconn
+    echo "iptables -D FORWARD -i ppp0 -o wlan0 -m state --state RELATED,ESTABLISHED -j ACCEPT" >> /etc/ppp/ip-down.d/3g_dconn
+    echo "iptables -A FORWARD -i wlan0 -o ppp0 -j ACCEPT" /etc/ppp/ip-down.d/3g_dconn
+#    sed -i -e '$a\' -e 'iptables -t nat -D POSTROUTING -o ppp0 -j MASQUERADE' /etc/ppp/ip-down.d/3g_dconn
+#    sed -i -e '$a\' -e 'iptables -D FORWARD -i ppp0 -o wlan0 -m state --state RELATED,ESTABLISHED -j ACCEPT' /etc/ppp/ip-down.d/3g_dconn
+#    sed -i -e '$a\' -e 'iptables -A FORWARD -i wlan0 -o ppp0 -j ACCEPT' /etc/ppp/ip-down.d/3g_dconn
+    # i2c tume
+    echo "i2c-dev" >> /etc/modules
+    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/shieldcheck) && echo "$tmpScript" > /usr/local/bin/shieldcheck && chmod +x /usr/local/bin/shieldcheck
+    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/shieldcheck.service) && echo "$tmpScript" > /lib/systemd/system/shieldcheck.service
+    systemctl enable shieldcheck.service
+    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/rc.local) && echo "$tmpScript" > /etc/rc.local && chmod +x /etc/rc.local
+    echo "$newVer" > /etc/etransver
+    exit 64
+  # no fallthru here 
     ;;
   *)
     notify "Unknown local version: $etver. Exit"
