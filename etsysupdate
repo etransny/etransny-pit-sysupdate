@@ -123,11 +123,11 @@ case "$etver" in
     # fallthru
     ;&
   20181214)
-    myVal=$(cat /proc/cpuinfo | grep -Po '([0-9,a-f]{16})')
-    if [ "00000000aee84a62" != "$myVal" ]
-    then
-      exit 0
-    fi
+    #myVal=$(cat /proc/cpuinfo | grep -Po '([0-9,a-f]{16})')
+    #if [ "00000000aee84a62" != "$myVal" ]
+    #then
+    #  exit 0
+    #fi
     newVer="20190110"
     notify "Updating to $newVer"
     # switch to wpa_supplicant as wifi manager
