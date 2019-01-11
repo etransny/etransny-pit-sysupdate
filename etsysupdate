@@ -161,7 +161,7 @@ case "$etver" in
     sed -i '/iptables/d' /etc/ppp/ip-down.d/3g_dconn
     echo "iptables -t nat -D POSTROUTING -o ppp0 -j MASQUERADE" >> /etc/ppp/ip-down.d/3g_dconn
     echo "iptables -D FORWARD -i ppp0 -o wlan0 -m state --state RELATED,ESTABLISHED -j ACCEPT" >> /etc/ppp/ip-down.d/3g_dconn
-    echo "iptables -A FORWARD -i wlan0 -o ppp0 -j ACCEPT" >> /etc/ppp/ip-down.d/3g_dconn
+    echo "iptables -D FORWARD -i wlan0 -o ppp0 -j ACCEPT" >> /etc/ppp/ip-down.d/3g_dconn
 #    sed -i -e '$a\' -e 'iptables -t nat -D POSTROUTING -o ppp0 -j MASQUERADE' /etc/ppp/ip-down.d/3g_dconn
 #    sed -i -e '$a\' -e 'iptables -D FORWARD -i ppp0 -o wlan0 -m state --state RELATED,ESTABLISHED -j ACCEPT' /etc/ppp/ip-down.d/3g_dconn
 #    sed -i -e '$a\' -e 'iptables -A FORWARD -i wlan0 -o ppp0 -j ACCEPT' /etc/ppp/ip-down.d/3g_dconn

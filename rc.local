@@ -22,7 +22,7 @@ fi
 expFile=/boot/expand;
 if [ -f $expFile ];
 then
-	echo "First run, fs expansion needed... wait"
+   echo "First run, configuring wpa_supplicant in AP mode..."
   # assign AP name in 
   if [ -e /usr/local/conf/wpa_supplicant/wpa_supplicant.conf ]
   then
@@ -33,28 +33,31 @@ then
     sudo -u etrans chmod 775 /usr/local/conf
     sudo -u etrans mkdir /usr/local/conf/wpa_supplicant  
   fi
-  touch /usr/local/conf/wpa_supplicant/wpa_supplicant.conf
-  echo "ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev" >> /usr/local/conf/wpa_supplicant/wpa_supplicant.conf
+  echo "ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev" > /usr/local/conf/wpa_supplicant/wpa_supplicant.conf
   echo "update_config=1" >> /usr/local/conf/wpa_supplicant/wpa_supplicant.conf
-  echo -e "\nnetwork={" >> /usr/local/conf/wpa_supplicant/wpa_supplicant.conf
-  echo -e "mode=2" >> /usr/local/conf/wpa_supplicant/wpa_supplicant.conf
+  echo "\nnetwork={" >> /usr/local/conf/wpa_supplicant/wpa_supplicant.conf
+  echo "mode=2" >> /usr/local/conf/wpa_supplicant/wpa_supplicant.conf
   cpuid=$(cat /proc/cpuinfo | grep -Po '([0-9abcdef]{16})')
-  echo -e "ssid=\"PiAP_$cpuid\"" >> /usr/local/conf/wpa_supplicant/wpa_supplicant.conf
+  echo "ssid=\"PiAP_$cpuid\"" >> /usr/local/conf/wpa_supplicant/wpa_supplicant.conf
   echo "psk=\"4321oleg\"" >> /usr/local/conf/wpa_supplicant/wpa_supplicant.conf
   echo "key_mgmt=WPA-PSK" >> /usr/local/conf/wpa_supplicant/wpa_supplicant.conf
   echo "frequency=2437" >> /usr/local/conf/wpa_supplicant/wpa_supplicant.conf
   echo "}" >> /usr/local/conf/wpa_supplicant/wpa_supplicant.conf
   chown etrans:etrans /usr/local/conf/wpa_supplicant/wpa_supplicant.conf
   sudo -u etrans chmod 775 /usr/local/conf/wpa_supplicant/wpa_supplicant.conf
+  if [ -e /etc/conf/wpa_supplicant/wpa_supplicant.conf ]
+  then
+    rm /etc/conf/wpa_supplicant/wpa_supplicant.conf
+  fi
   cd /etc/wpa_supplicant
-  ln -s /usr/local/conf/wpa_supplicant/wpa_supplicant.conf
-	logger -t EXP_CHECK "First run, fs expansion needed"
-	raspi-config --expand-rootfs
-	#read -n1 -r -p "fs expand finished..." key
-	echo "fs expand finished... rebooting"
-	rm $expFile
-	shutdown -r now
-	exit 0
+  ln -sf /usr/local/conf/wpa_supplicant/wpa_supplicant.conf
+  logger -t EXP_CHECK "First run, fs expansion needed"
+  raspi-config --expand-rootfs
+  #read -n1 -r -p "fs expand finished..." key
+  echo "First run, set fs to expand on next reboot... rebooting"
+  rm $expFile
+  shutdown -r now
+  exit 0
 else
   #gpstimesync
   if [ -x /usr/local/bin/gpstimesync ]
