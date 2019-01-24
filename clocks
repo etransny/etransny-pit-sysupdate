@@ -1,0 +1,43 @@
+#!/bin/sh
+
+load_time(){
+  if [ -e "$clock" ] ; then
+    logger -t CLOCKSET "Loading time from hardware clock $clock."
+    # These defaults are user-overridable in /etc/default/hwclock
+    BADYEAR=no
+    HWCLOCKACCESS=yes
+    HWCLOCKPARS=
+    HCTOSYS_DEVICE=rtc0
+    if [ -f /etc/default/hwclock ] ; then
+        . /etc/default/hwclock
+    fi
+    /sbin/hwclock --rtc=$clock --systz
+    /sbin/hwclock --rtc=$clock --hctosys
+  else
+    logger -t CLOCKSET "Loading time from fake-hwclock"
+    /sbin/fake-hwclock load
+  fi
+}
+
+save_time(){
+  if [ -e "$clock" ] ; then
+    logger -t CLOCKSET "Saving time to hardware clock $clock."
+    /sbin/hwclock --systohc
+  fi
+  logger -t CLOCKSET "Saving time with fake-hwclock (always)"
+  /sbin/fake-hwclock save
+}
+
+cmd=$1
+clock=/dev/rtc0
+case "$cmd" in
+  load)
+    load_time
+  ;;
+  save)
+    save_time
+  ;;
+  *)
+    logger -t CLOCKSET "Unknown command: $cmd."
+  ;;
+esac

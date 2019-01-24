@@ -1,0 +1,14 @@
+[Unit]
+Description=Daemon to restore / save the current clock (RTC and/or FAKE)
+After=sysinit.target
+Conflicts=shutdown.target
+
+[Service]
+#EnvironmentFile=-/etc/default/fake-hwclock
+ExecStart=/usr/local/bin/clocks load
+ExecStop=/usr/local/bin/clocks save
+Type=oneshot
+RemainAfterExit=yes
+
+[Install]
+WantedBy=basic.target

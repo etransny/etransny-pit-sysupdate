@@ -1,0 +1,2 @@
+#!/bin/sh
+/bin/sed "s/PiAP/PiAP_$(cat /proc/cpuinfo | grep -Po '([0-9abcdef]{16})')/" /usr/local/conf/wpa_supplicant.tmpl > /usr/local/conf/wpa_supplicant/wpa_supplicant.conf

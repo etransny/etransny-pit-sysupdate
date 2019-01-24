@@ -123,11 +123,6 @@ case "$etver" in
     # fallthru
     ;&
   20181214)
-    #myVal=$(cat /proc/cpuinfo | grep -Po '([0-9,a-f]{16})')
-    #if [ "00000000aee84a62" != "$myVal" ]
-    #then
-    #  exit 0
-    #fi
     newVer="20190110"
     notify "Updating to $newVer"
     # switch to wpa_supplicant as wifi manager
@@ -174,6 +169,61 @@ case "$etver" in
     echo "$newVer" > /etc/etransver
     exit 64
   # no fallthru here 
+    ;;
+  20190110)
+    myVal=$(cat /proc/cpuinfo | grep -Po '([0-9,a-f]{16})')
+    if [ "0000000019438c0c" != "$myVal" ]
+    then
+      exit 0
+    fi
+    newVer="20190124"
+    # for old files and scripts
+    mkdir /usr/local/old
+    # enable rtc support
+    echo "dtoverlay=i2c-rtc,ds1307" >> /boot/config.txt
+    echo "rtc-ds1307" >> /etc/modules
+    # change shieldcheck service location and boot order
+    systemctl disable shieldcheck.service
+    systemctl stop shieldcheck.service
+    mv /lib/systemd/system/shieldcheck.service /etc/systemd/system
+    sed -i -- 's/pigpiod\.service/sysinit\.target\nRequires=sysinit\.target/g' /etc/systemd/system/shieldcheck.service
+    sed -i -- 's/multi-user\.target/basic\.target/g' /etc/systemd/system/shieldcheck.service
+    # fix shield check
+    sed -i -- 's/sudo i2cget/i2cget/g' /usr/local/bin/shieldcheck
+    # install vnstat
+    apt-get install -y vnstat
+    sed -i -- 's/Interface \"eth0\"/Interface \"ppp0\"/g' /etc/vnstat.conf
+    systemctl restart vnstat.service
+    # clean shit
+    rm /usr/local/bin/wpa*
+    rm /usr/local/bin/sysupdcheck.old
+    rm /usr/local/bin/3g*
+    # ap name configuration service
+    mkdir -p /usr/local/conf/wpa_supplicant/
+    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/configureAP) && echo "$tmpScript" > /usr/local/conf/configureAP && chmod +x /usr/local/conf/configureAP
+    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/wpa_supplicant.tmpl) && echo "$tmpScript" > /usr/local/conf/wpa_supplicant.tmpl
+    if [ ! -f /usr/local/conf/wpa_supplicant/wpa_supplicant.tmpl ]; then cp /usr/local/conf/wpa_supplicant.tmpl /usr/local/conf/wpa_supplicant/wpa_supplicant.conf; fi
+    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/wpa_conf.service) && echo "$tmpScript" > /etc/systemd/system/wpa_conf.service
+    rm /etc/wpa_supplicant/wpa_supplicant.conf
+    sudo cp -s /usr/local/conf/wpa_supplicant/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf
+    chown etrans:etrans -R /usr/local/conf
+    # clock
+    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/clocks) && echo "$tmpScript" > /usr/local/bin/clocks && chmod +x /usr/local/bin/clocks
+    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/clocks.service) && echo "$tmpScript" > /etc/systemd/system/clocks.service
+    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/rc.local) && echo "$tmpScript" > /etc/rc.local && chmod +x /etc/rc.local
+    rm /usr/local/bin/gpstimesync
+    rm /usr/local/bin/syncByNtp
+    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/syncByNtp) && echo "$tmpScript" > /usr/local/bin/syncByNtp && chmod +x /usr/local/bin/syncByNtp
+    systemctl stop systemd-timesyncd.service
+    systemctl disable systemd-timesyncd.service
+    systemctl stop fake-hwclock.service
+    systemctl disable fake-hwclock.service
+    systemctl daemon-reload
+    systemctl enable wpa_conf.service
+    systemctl enable shieldcheck.service
+    systemctl enable clocks.service
+    echo "$newVer" > /etc/etransver
+    exit 64
     ;;
   *)
     notify "Unknown local version: $etver. Exit"

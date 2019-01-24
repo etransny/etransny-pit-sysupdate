@@ -1,12 +1,13 @@
-Description=EtransShield check service
+[Unit]
+Description=Configure wifi in AP mode with specific name
 After=sysinit.target
-Requires=sysinit.target
 Conflicts=shutdown.target
 
 [Service]
+User=etrans
 Type=oneshot
 RemainAfterExit=true
-ExecStart=/usr/local/bin/shieldcheck
+ExecStart=/usr/local/conf/configureAP 
 StandardOutput=journal
 
 [Install]
