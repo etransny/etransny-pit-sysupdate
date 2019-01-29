@@ -20,9 +20,11 @@ load_time(){
 }
 
 save_time(){
-  if [ -e "$clock" ] ; then
+  if [ -e "$clock" -a ! -e /run/udev/hwclock-set ] ; then
+    # only ones
     logger -t CLOCKSET "Saving time to hardware clock $clock."
     /sbin/hwclock --systohc
+    > /run/udev/hwclock-set
   fi
   logger -t CLOCKSET "Saving time with fake-hwclock (always)"
   /sbin/fake-hwclock save
