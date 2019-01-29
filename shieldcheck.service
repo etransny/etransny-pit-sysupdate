@@ -1,7 +1,6 @@
 Description=EtransShield check service
 After=sysinit.target
 Requires=sysinit.target
-Conflicts=shutdown.target
 
 [Service]
 Type=oneshot

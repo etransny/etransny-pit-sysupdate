@@ -1,0 +1,12 @@
+[Unit]
+Description=Custom NTP time sync
+After=network-online.target
+
+[Service]
+ExecStartPre=/bin/nc -z pool.ntp.org 80
+ExecStart=/usr/local/conf/ntpsync
+Restart=on-failure
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target

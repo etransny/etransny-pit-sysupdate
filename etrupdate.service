@@ -1,0 +1,14 @@
+[Unit]
+Description=Etrans system update
+After=network-online.target
+
+[Service]
+SuccessExitStatus=64
+ExecStartPre=/bin/nc -z raw.githubusercontent.com 443 > /dev/null
+ExecStart=/usr/local/conf/etsysupdate
+#ExecStartPost=
+Restart=on-failure
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target

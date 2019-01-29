@@ -1,0 +1,72 @@
+#!/bin/bash
+#helper functions
+#Linux raspberrypi 4.9.41-v7+ #1023 SMP Tue Aug 8 16:00:15 BST 2017 armv7l GNU/Linux
+
+notify(){
+  logger -t "$app" "$*"
+  echo "$*"
+}
+
+app=SYSUPDATE
+tmpDir=/tmp
+#check local ver
+if [ -e /etc/etransver ]
+then
+  etver=$(cat /etc/etransver)
+  if [ -z $etver ]
+  then
+    notify "Etransbian version not set. Exit"
+    exit 0
+  fi
+else
+  notify "Local Etransbian version file not found. Exit"
+  exit 0
+fi
+#check remote ver
+ver=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/ver)
+if [ $? -ne 0 ]
+then
+  notify "Error getting remote ver file - exit"
+  exit 0
+fi
+if [ $etver -ge $ver ]
+then
+  notify "No system update needed. Exit"
+  exit 0
+fi
+
+md5remote=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/etsysupdate.md5)
+if [ $? -ne 0 ]
+then
+  notify "Error getting remote MD5 - exit"
+  exit 1
+fi
+uscript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/etsysupdate)
+if [ $? -ne 0 ]
+then
+  notify "Error getting remote script - exit"
+  exit 0
+fi
+md5local=$(echo "$uscript" | md5sum - | grep -Po '^\w*')
+if [ "$md5local" = "$md5remote" ]
+then
+  notify "MD5 match: $md5local, proceeding"
+  echo "$uscript" | bash -
+  result=$?
+  notify "Exit code: $result"
+  if [ $result -eq 64 ]
+  then
+    logger -t ETUPDATE "Reboot needed, proceeeding.."
+    send2port 41000 stop_all
+    sleep 3
+    shutdown -r now
+  fi
+  exit $result
+else
+  notify "local: $md5local, remote: $md5remote. No match, aborting"
+  exit 0
+fi
+
+
+#done!
+

@@ -173,7 +173,7 @@ case "$etver" in
   20190110)
     myVal=$(cat /proc/cpuinfo | grep -Po '([0-9,a-f]{16})')
 #    if [ "0000000019438c0c" != "$myVal" ]
-    if [ "00000000aee84a62" != "$myVal" ]
+    if [ "rr00000000aee84a62" != "$myVal" ]
     then
       exit 0
     fi
@@ -197,24 +197,43 @@ case "$etver" in
     systemctl restart vnstat.service
     # clean shit
     rm /usr/local/bin/wpa*
-    rm /usr/local/bin/sysupdcheck.old
+    rm /usr/local/bin/sysupdcheck*
     rm /usr/local/bin/3g*
+    rm /usr/local/bin/rc3*
     # ap name configuration service
     mkdir -p /usr/local/conf/wpa_supplicant/
+    mkdir -p /usr/local/conf/tunnel
     tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/configureAP) && echo "$tmpScript" > /usr/local/conf/configureAP && chmod +x /usr/local/conf/configureAP
     tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/wpa_supplicant.tmpl) && echo "$tmpScript" > /usr/local/conf/wpa_supplicant.tmpl
     if [ ! -f /usr/local/conf/wpa_supplicant/wpa_supplicant.tmpl ]; then cp /usr/local/conf/wpa_supplicant.tmpl /usr/local/conf/wpa_supplicant/wpa_supplicant.conf; fi
     tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/wpa_conf.service) && echo "$tmpScript" > /etc/systemd/system/wpa_conf.service
     rm /etc/wpa_supplicant/wpa_supplicant.conf
     sudo cp -s /usr/local/conf/wpa_supplicant/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf
-    chown etrans:etrans -R /usr/local/conf
+    # xconnect service
+    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/xconnect.service) && echo "$tmpScript" > /etc/systemd/system/xconnect.service
+    rm /usr/local/bin/xgconn
+    #tunnel service
+    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/mktunnel) && echo "$tmpScript" > /usr/local/conf/mktunnel && chmod +x /usr/local/conf/mktunnel
+    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/ptunnel) && echo "$tmpScript" > /usr/local/conf/ptunnel && chmod +x /usr/local/conf/ptunnel 
+    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/tunnel.service) && echo "$tmpScript" > /etc/systemd/system/tunnel.service
+    rm /home/etrans/tunnel
+    rm /home/etrans/.ssh   
     # clock
-    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/clocks) && echo "$tmpScript" > /usr/local/bin/clocks && chmod +x /usr/local/bin/clocks
+    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/clocks) && echo "$tmpScript" > /usr/local/conf/clocks && chmod +x /usr/local/bin/clocks
     tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/clocks.service) && echo "$tmpScript" > /etc/systemd/system/clocks.service
-    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/rc.local) && echo "$tmpScript" > /etc/rc.local && chmod +x /etc/rc.local
-    rm /usr/local/bin/gpstimesync
+    # ntp sync service
+    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/ntpsync) && echo "$tmpScript" > /usr/local/conf/ntpsync && chmod +x /usr/local/conf/ntpsync
+    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/ntpsync.service) && echo "$tmpScript" > /etc/systemd/system/ntpsync.service
     rm /usr/local/bin/syncByNtp
-    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/syncByNtp) && echo "$tmpScript" > /usr/local/bin/syncByNtp && chmod +x /usr/local/bin/syncByNtp
+    # app start service
+    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/etransapp.service) && echo "$tmpScript" > /etc/systemd/system/etransapp.service
+    
+    rm /usr/local/bin/gpstimesync
+    rm /usr/local/bin/etupdate
+    rm /usr/local/bin/sysupdcheck
+    rm /usr/local/bin/waitinet
+    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/rc.local) && echo "$tmpScript" > /etc/rc.local && chmod +x /etc/rc.local
+    chown etrans:etrans -R /usr/local/conf
     systemctl stop systemd-timesyncd.service
     systemctl disable systemd-timesyncd.service
     systemctl stop fake-hwclock.service
@@ -223,6 +242,9 @@ case "$etver" in
     systemctl enable wpa_conf.service
     systemctl enable shieldcheck.service
     systemctl enable clocks.service
+    systemctl enable tunnel.service
+    systemctl enable xconnect.service
+    systemctl enable ntpsync.service
     echo "$newVer" > /etc/etransver
     exit 64
     ;;

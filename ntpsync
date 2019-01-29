@@ -1,0 +1,15 @@
+#!/bin/bash
+syncFlag="/tmp/syncOK"
+ntpdate -s pool.ntp.org
+if [ $? -eq 0 ]
+then
+  logger -t NTPSYNC "Time Sync success"
+  clocks save
+  if [ ! -e "$syncFlag" ]
+  then
+    touch "$syncFlag"
+  fi
+else
+  exit 1
+fi
+

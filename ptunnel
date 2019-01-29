@@ -1,0 +1,96 @@
+#!/bin/bash
+
+# fork this script as it blocks thread until internet is awailable
+make_tunnel(){
+  logger -t TUNNEL "Starting tunnel to $1:$2"
+  autossh -fN -o "PubkeyAuthentication=yes" -o "StrictHostKeyChecking=no" -o "PasswordAuthentication=no" -o "ServerAliveInterval 60" -o "ServerAliveCountMax 3"  -o "IdentityFile=$privKeyFile" -R $1:$2:localhost:22 tunnel@$1
+}
+
+#ssh -N -o PubkeyAuthentication=yes -o StrictHostKeyChecking=no -o PasswordAuthentication=no -o ServerAliveInterval=60 -o ServerAliveCountMax=3 -o IdentityFile=/home/etrans/.ssh/id_rsa_00000000aee84a62 -R 35.225.108.187:2005:localhost:22 tunnel@35.225.108.187
+
+run_with_local_data(){
+  if [ -e $tunnelFile ]
+  then
+    logger -t TUNNEL "Tunnel file detected"
+    value=$(cat $tunnelFile)
+    tunnelURL=$(echo "${value%:*}")
+    tunnelPort=$(echo "${value#*:}")
+    make_tunnel $tunnelURL $tunnelPort
+  else
+    logger -t TUNNEL "Tunnel file absent, exit"
+    echo "Tunnel data absent, exit"
+    exit 0
+  fi
+}
+
+parse_reply(){
+  tunnelURL=$(echo $reply | jq ".tunnelURL" | sed 's/"//g' )
+  if [ $tunnelURL = null ]
+  then
+    logger -t TUNNEL "Tunnel host: bad value"
+    exit 1
+  fi
+  if [ -z  "$tunnelURL" ]
+  then
+    logger -t TUNNEL "Tunnel host: bad value"
+    exit 1
+  fi
+  #echo $tunnelURL
+  tunnelPort=$(echo $reply | jq ".tunnelPort" )
+  if [ $tunnelPort = null ]
+  then
+    logger -t TUNNEL "Tunnel port: bad value"
+    exit 1
+  fi
+  if [ -z  "$tunnelPort" ]
+  then
+    logger -t TUNNEL "Tunnel port: bad value"
+    exit 1
+  fi
+  #echo $tunnelPort
+  echo -e "TURL=$tunnelURL\nTPORT=$tunnelPort" > $tunnelFile
+}
+
+generate_keys(){
+  logger -t TUNNEL "Generating keys for $unitID"
+  rm -rf /usr/local/conf/tunnel/*
+  ssh-keygen -q -t rsa -C $unitID -f $privKeyFile -N ""
+}
+
+unitID=$(cat /proc/cpuinfo | grep Serial | cut -d ' ' -f 2)
+homeDir="/usr/local/conf/tunnel"
+privKeyFile="$homeDir/id_rsa"
+pubKeyFile="$homeDir/id_rsap.pub"
+#authURL="http://office.kolizejserver.com:22000/rpiapiv1/auth"
+authURL="http://35.184.184.13:22000/rpiapiv1/auth"
+tunnelFile="$homeDir/tunnel"
+#echo $privKeyFile
+#echo $unitID
+logger -t TUNNEL "Checking key file..."
+if [ -e "$privKeyFile" -a -e "$pubKeyFile" ]
+then
+  cat "$pubKeyFile" | grep "$unitID" > /dev/null
+  if [ $? -ne 0 ]
+  then
+    generate_keys
+  else
+    logger -t TUNNEL "$unitID key already exists"
+  fi
+else
+  generate_keys
+  #eval "$(ssh-agent -s)"
+  #ssh-add $privKeyFile
+fi
+
+pubKey="$(cat "$privKeyFile.pub")"
+authData="{\"uuid\":\""${unitID}"\",\"pubKey\":\""${pubKey}"\"}"
+echo $authData > /tmp/auth.json
+
+reply="$(curl -s -X POST -H "Content-Type: application/json" -d "@/tmp/auth.json" $authURL)"
+exitValue=$?
+if [ $exitValue -eq 0 ]
+then
+  parse_reply
+else
+  exit $exitValue
+fi

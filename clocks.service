@@ -5,8 +5,8 @@ Conflicts=shutdown.target
 
 [Service]
 #EnvironmentFile=-/etc/default/fake-hwclock
-ExecStart=/usr/local/bin/clocks load
-ExecStop=/usr/local/bin/clocks save
+ExecStart=/usr/local/conf/clocks load
+ExecStop=/usr/local/conf/clocks save
 Type=oneshot
 RemainAfterExit=yes
 

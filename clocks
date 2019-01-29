@@ -13,6 +13,7 @@ load_time(){
     fi
     /sbin/hwclock --rtc=$clock --systz
     /sbin/hwclock --rtc=$clock --hctosys
+    > /run/clockset
   else
     logger -t CLOCKSET "Loading time from fake-hwclock"
     /sbin/fake-hwclock load
