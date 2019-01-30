@@ -52,7 +52,6 @@ parse_reply(){
 }
 
 generate_keys(){
-  logger -t TUNNEL "Generating keys for $unitID"
   rm -rf /usr/local/conf/tunnel/*
   ssh-keygen -q -t rsa -C $unitID -f $privKeyFile -N ""
 }
@@ -60,23 +59,25 @@ generate_keys(){
 unitID=$(cat /proc/cpuinfo | grep Serial | cut -d ' ' -f 2)
 homeDir="/usr/local/conf/tunnel"
 privKeyFile="$homeDir/id_rsa"
-pubKeyFile="$homeDir/id_rsap.pub"
+pubKeyFile="$homeDir/id_rsa.pub"
 #authURL="http://office.kolizejserver.com:22000/rpiapiv1/auth"
 authURL="http://35.184.184.13:22000/rpiapiv1/auth"
 tunnelFile="$homeDir/tunnel"
 #echo $privKeyFile
 #echo $unitID
 logger -t TUNNEL "Checking key file..."
-if [ -e "$privKeyFile" -a -e "$pubKeyFile" ]
+if [ -e "$privKeyFile" ] && [ -e "$pubKeyFile" ]
 then
   cat "$pubKeyFile" | grep "$unitID" > /dev/null
   if [ $? -ne 0 ]
   then
+    logger -t TUNNEL "UnitID mismatch. Regenerating keys"
     generate_keys
   else
     logger -t TUNNEL "$unitID key already exists"
   fi
 else
+  logger -t TUNNEL "One of public/private key absent. Generating..."
   generate_keys
   #eval "$(ssh-agent -s)"
   #ssh-add $privKeyFile

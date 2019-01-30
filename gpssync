@@ -2,54 +2,59 @@
 
 #TPV contains i.e. 2018-04-05T11:40:07.000Z
 #fork, as it's blocking!
-syncFlag="/tmp/timeSynced"
-gpsTimeString=;
-MAXDELTA=5;
+
+syncFlag="/tmp/syncOK"
+MAXDELTA=10;
+oneYear=31536000;
 count=0;
-while true
-do
-  sleep 1;
-  (( count++ ))
-  echo "Data retrieve cycle: $count"
-  gpsTimeString=$(gpspipe 127.0.0.1:2947 -w -n 5 | grep TPV | grep -m 1 time)
-  if [ -n "$gpsTimeString" ]
+
+if [ -f "$syncFlag" ]
+then
+  logger -t GPSTIMESYNC "Already synced, skipping"
+  exit 0
+fi
+gpsTimeString=$(gpspipe 127.0.0.1:2947 -w -n 5 | grep TPV | grep -m 1 time)
+if [ -n "$gpsTimeString" ]
+then
+  gpsDT=$(echo "$gpsTimeString" | sed -r 's/.*"time":"([^"]*)".*/\1/')
+  locDT="$(date -u +%Y-%m-%dT%T).000Z"
+  secGPS=$(date +%s --date="$gpsDT")
+  secLOC=$(date +%s --date="$locDT")
+  message="UTC datetime: GPS $gpsDT  / Local $locDT"
+  logger -t GPSTIMESYNC $message
+  #echo $message
+  deltaT=$((secGPS - secLOC))
+  if [ $deltaT -lt 0 ]
   then
-    gpsDT=$(echo "$gpsTimeString" | sed -r 's/.*"time":"([^"]*)".*/\1/')
-    locDT="$(date -u +%Y-%m-%dT%T).000Z"
-    secGPS=$(date +%s --date="$gpsDT")
-    secLOC=$(date +%s --date="$locDT")
-    message="UTC datetime: GPS $gpsDT  / Local $locDT"
-    logger -t GPSTIMESYNC $message
-    #echo $message
-    deltaT=$((secGPS - secLOC))
-    if [ $deltaT -lt 0 ]
-    then
-      deltaT=$((-deltaT))
-    fi
-    if [ $deltaT -gt $MAXDELTA ]
-    then
-      logger -t GPSTIMESYNC "Local vs GPS times differ by $deltaT sec(s), sync needed"
-      #echo "delta is $deltaT sync needed"
-      date --set="$gpsDT"
-      if [ $? -eq 0 ]
-      then
-        logger -t GPSTIMESYNC "Time Sync success"
-        if [ ! -e "$syncFlag" ]
-        then
-          touch "$syncFlag"
-          send2port 41000 timeSynced
-          if [ -x /home/etrans/etrans/app_start ]
-          then
-            sudo -u etrans /home/etrans/etrans/./app_start
-          fi
-        fi
-        break
-      fi
-    else
-        echo "delta is $deltaT sync NOT needed"
-      logger -t GPSTIMESYNC "Local vs GPS times differs by $deltaT sec(s), sync skipped"
-    fi
-    break
+    deltaT=$((-deltaT))
   fi
-done
+  if [ $delta -gt $oneYear ]
+  then
+    logger -t GPSTIMESYNC "Difference too big ($delta sec). Skipping sync"
+    exit 0
+  fi
+  if [ -f "$syncFlag" ]
+  then
+    logger -t GPSTIMESYNC "Already synced, skipping"
+    exit 0
+  fi
+  if [ $deltaT -gt $MAXDELTA ]
+  then
+    logger -t GPSTIMESYNC "Local vs GPS times differ by $deltaT sec(s), sync needed"
+    #echo "delta is $deltaT sync needed"
+    date --set="$gpsDT"
+    if [ $? -eq 0 ]
+    then
+      /usr/local/bin/clocks save
+      logger -t GPSTIMESYNC "Time Sync success"
+      > "$syncFlag"
+    else
+      exit 1
+    fi
+  else
+    logger -t GPSTIMESYNC "delta is $deltaT sync NOT needed"
+  fi
+else
+  exit 1
+fi
 

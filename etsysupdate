@@ -173,25 +173,30 @@ case "$etver" in
   20190110)
     myVal=$(cat /proc/cpuinfo | grep -Po '([0-9,a-f]{16})')
 #    if [ "0000000019438c0c" != "$myVal" ]
-    if [ "rr00000000aee84a62" != "$myVal" ]
+    if [ "00000000aee84a62" != "$myVal" ]
     then
       exit 0
     fi
     newVer="20190124"
+    notify "Updating to $newVer"
     # for old files and scripts
     mkdir /usr/local/old
     # enable rtc support
+    notify "Updating hw"
     echo "dtoverlay=i2c-rtc,ds1307" >> /boot/config.txt
     echo "rtc-ds1307" >> /etc/modules
     # change shieldcheck service location and boot order
+    notify "Updating shieldcheck"
     systemctl disable shieldcheck.service
     systemctl stop shieldcheck.service
-    mv /lib/systemd/system/shieldcheck.service /etc/systemd/system
-    sed -i -- 's/pigpiod\.service/sysinit\.target\nRequires=sysinit\.target/g' /etc/systemd/system/shieldcheck.service
-    sed -i -- 's/multi-user\.target/basic\.target/g' /etc/systemd/system/shieldcheck.service
+    rm /lib/systemd/system/shieldcheck.service
+    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/shieldcheck.service) && echo "$tmpScript" > /etc/systemd/system/shieldcheck.service
+    #sed -i -- 's/pigpiod\.service/sysinit\.target\nRequires=sysinit\.target/g' /etc/systemd/system/shieldcheck.service
+    #sed -i -- 's/multi-user\.target/basic\.target/g' /etc/systemd/system/shieldcheck.service
     # fix shield check
     sed -i -- 's/sudo i2cget/i2cget/g' /usr/local/bin/shieldcheck
     # install vnstat
+    notify "vnstat"
     apt-get install -y vnstat
     sed -i -- 's/Interface \"eth0\"/Interface \"ppp0\"/g' /etc/vnstat.conf
     systemctl restart vnstat.service
@@ -201,6 +206,7 @@ case "$etver" in
     rm /usr/local/bin/3g*
     rm /usr/local/bin/rc3*
     # ap name configuration service
+    notify "Updating wpa"
     mkdir -p /usr/local/conf/wpa_supplicant/
     mkdir -p /usr/local/conf/tunnel
     tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/configureAP) && echo "$tmpScript" > /usr/local/conf/configureAP && chmod +x /usr/local/conf/configureAP
@@ -210,29 +216,46 @@ case "$etver" in
     rm /etc/wpa_supplicant/wpa_supplicant.conf
     sudo cp -s /usr/local/conf/wpa_supplicant/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf
     # xconnect service
+    notify "Updating xconn"
     tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/xconnect.service) && echo "$tmpScript" > /etc/systemd/system/xconnect.service
     rm /usr/local/bin/xgconn
     #tunnel service
+    notify "Updating tunnel"
     tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/mktunnel) && echo "$tmpScript" > /usr/local/conf/mktunnel && chmod +x /usr/local/conf/mktunnel
     tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/ptunnel) && echo "$tmpScript" > /usr/local/conf/ptunnel && chmod +x /usr/local/conf/ptunnel 
     tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/tunnel.service) && echo "$tmpScript" > /etc/systemd/system/tunnel.service
     rm /home/etrans/tunnel
     rm /home/etrans/.ssh   
     # clock
+    notify "Updating clock"
     tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/clocks) && echo "$tmpScript" > /usr/local/conf/clocks && chmod +x /usr/local/bin/clocks
     tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/clocks.service) && echo "$tmpScript" > /etc/systemd/system/clocks.service
     # ntp sync service
+    notify "Updating ntpsync"
     tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/ntpsync) && echo "$tmpScript" > /usr/local/conf/ntpsync && chmod +x /usr/local/conf/ntpsync
     tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/ntpsync.service) && echo "$tmpScript" > /etc/systemd/system/ntpsync.service
     rm /usr/local/bin/syncByNtp
     # app start service
+    notify "Updating appstart"
     tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/etransapp.service) && echo "$tmpScript" > /etc/systemd/system/etransapp.service
-    
-    rm /usr/local/bin/gpstimesync
+    # update service
+    notify "Updating sys update service"
+    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/etsys_update) && echo "$tmpScript" > /usr/local/conf/etsys_update && chmod +x /usr/local/conf/etsys_update
+    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/etsys_update.service) && echo "$tmpScript" > /etc/systemd/system/etsys_update.service
     rm /usr/local/bin/etupdate
     rm /usr/local/bin/sysupdcheck
+    # gps
+    notify "Updating gpssync"
+    mpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/gpssync) && echo "$tmpScript" > /usr/local/conf/gpssync && chmod +x /usr/local/conf/gpssync
+    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/gpssync.service) && echo "$tmpScript" > /etc/systemd/system/gpssync.service
+    rm /usr/local/bin/gpstimesync
     rm /usr/local/bin/waitinet
+     # gps
+    notify "Updating app update service"
+    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/etapp_update.service) && echo "$tmpScript" > /etc/systemd/system/etapp_update.service
+    notify "Updating rc.local"
     tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/rc.local) && echo "$tmpScript" > /etc/rc.local && chmod +x /etc/rc.local
+    notify "Updating daemons start"    
     chown etrans:etrans -R /usr/local/conf
     systemctl stop systemd-timesyncd.service
     systemctl disable systemd-timesyncd.service
@@ -245,6 +268,10 @@ case "$etver" in
     systemctl enable tunnel.service
     systemctl enable xconnect.service
     systemctl enable ntpsync.service
+    systemctl enable gpssync.service
+    systemctl enable etransapp.service
+    systemctl enable etapp_update.service
+    systemctl enable etsys_update.service
     echo "$newVer" > /etc/etransver
     exit 64
     ;;

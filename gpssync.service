@@ -1,0 +1,13 @@
+[Unit]
+Description=Custom GPS time sync
+Requires=gpsd.service
+After=network-online.target gpsd.service
+
+[Service]
+ExecStart=/usr/local/conf/gpssync
+Restart=on-failure
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target
+

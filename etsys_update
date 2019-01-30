@@ -58,7 +58,7 @@ then
   then
     logger -t ETUPDATE "Reboot needed, proceeeding.."
     send2port 41000 stop_all
-    sleep 3
+    sleep 5
     shutdown -r now
   fi
   exit $result

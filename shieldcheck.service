@@ -1,6 +1,8 @@
+[Unit]
 Description=EtransShield check service
 After=sysinit.target
 Requires=sysinit.target
+Conflicts=shutdown.target
 
 [Service]
 Type=oneshot
@@ -10,4 +12,3 @@ StandardOutput=journal
 
 [Install]
 WantedBy=basic.target
-

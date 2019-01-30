@@ -1,0 +1,15 @@
+[Unit]
+Description=Etrans system update
+After=network-online.target
+ConditionPathExists=/home/etrans/app_update
+
+[Service]
+User=etrans
+ExecStartPre=/bin/nc -z raw.githubusercontent.com 443
+ExecStart=/home/etrans/app_update 2016etrans
+#ExecStartPost=
+Restart=on-failure
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target

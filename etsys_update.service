@@ -4,11 +4,11 @@ After=network-online.target
 
 [Service]
 SuccessExitStatus=64
-ExecStartPre=/bin/nc -z raw.githubusercontent.com 443 > /dev/null
-ExecStart=/usr/local/conf/etsysupdate
+ExecStartPre=/bin/nc -z raw.githubusercontent.com 443
+ExecStart=/usr/local/conf/etsys_update
 #ExecStartPost=
 Restart=on-failure
-RestartSec=60
+RestartSec=30
 
 [Install]
 WantedBy=multi-user.target
