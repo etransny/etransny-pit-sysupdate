@@ -81,6 +81,8 @@ case "$etver" in
     # xconnect service
     notify "Updating xconn"
     tmpScript=$(wget --no-cache -qO- "$resourceURL"xconnect.service) && echo "$tmpScript" > /etc/systemd/system/xconnect.service
+    tmpScript=$(wget --no-cache -qO- "$resourceURL"96-usb3g4gmodem.rules) && echo "$tmpScript" > /lib/udev/rules.d/96-usb3g4gmodem.rules
+    96-usb3g4gmodem.rules
     rm /usr/local/bin/xgconn
     #tunnel service
     notify "Updating tunnel"
