@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 load_time(){
   if [ -e "$clock" ] ; then
@@ -21,7 +21,7 @@ load_time(){
 }
 
 save_time(){
-  if [ -e "$clock" -a ! -e /run/udev/hwclock-set ] ; then
+  if [ -e "$clock" ] && [ ! -e /run/udev/hwclock-set ] ; then
     # only ones
     logger -t CLOCKSET "Saving time to hardware clock $clock."
     /sbin/hwclock --systohc
@@ -44,3 +44,4 @@ case "$cmd" in
     logger -t CLOCKSET "Unknown command: $cmd."
   ;;
 esac
+

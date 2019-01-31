@@ -1,0 +1,11 @@
+#!/bin/bash
+
+echo "Waiting to get online..."
+while true; do
+  nc -z www.google.com 80
+  if [ $? -eq 0 ]; then
+    echo "System is online"
+    exit 0
+  fi
+  sleep 10
+done

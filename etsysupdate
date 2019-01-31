@@ -22,6 +22,8 @@ check_update(){
 
 }
 
+
+
 app=SYSUPDATE
 if [ "$(id -u)" != "0" ]; then
 	notify "Not root"
@@ -30,146 +32,6 @@ fi
 etver=$(cat /etc/etransver)
 updated=0
 case "$etver" in
-  20180405)
-    myVal=$(cat /proc/cpuinfo | grep -Po '([0-9,a-f]{16})')
-    #if [ "0000000019438c0c" = "$myVal" ]
-    #then
-      newVer="20181001"
-      notify "Updating to $newVer"
-      check_update "$newVer"
-      apt-get install -y pigpio python-pigpio python3-pigpio ntpdate
-      if [ $? -eq 0 ]
-      then
-        sed -i -- 's/pigpiod -l/pigpiod/g' /lib/systemd/system/pigpiod.service && systemctl enable pigpiod.service && systemctl start pigpiod.service
-        sed -i -- 's/maxfail 3/maxfail 5/g' /usr/local/bin/xgconn
-        tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/syncByGps) && echo "$tmpScript" > /usr/local/bin/gpstimesync
-        wget -P /usr/local/bin/ https://raw.githubusercontent.com/D2Edev/et2/master/syncByNtp && chmod +x /usr/local/bin/syncByNtp && sed -i '7 a syncByNtp &' /usr/local/bin/etupdate && systemctl stop systemd-timesyncd.service && systemctl disable systemd-timesyncd.service
-        tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/rc.local) && echo "$tmpScript" > /etc/rc.local
-        echo "$newVer" > /etc/etransver
-      fi
-    #fi
-    exit 64
-  # no fallthru here 
-    ;;
-  20180606)
-    myVal=$(cat /proc/cpuinfo | grep -Po '([0-9,a-f]{16})')
-    #if [ "0000000019438c0c" = "$myVal" ]
-    #then
-      newVer="20181002"
-      notify "Updating to $newVer"
-      check_update "$newVer"
-      apt-get install -y pigpio python-pigpio python3-pigpio ntpdate
-      if [ $? -eq 0 ]
-      then
-        sed -i -- 's/pigpiod -l/pigpiod/g' /lib/systemd/system/pigpiod.service && systemctl enable pigpiod.service && systemctl start pigpiod.service
-        sed -i -- 's/maxfail 3/maxfail 5/g' /usr/local/bin/xgconn
-        tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/syncByGps) && echo "$tmpScript" > /usr/local/bin/gpstimesync
-        wget -P /usr/local/bin/ https://raw.githubusercontent.com/D2Edev/et2/master/syncByNtp && chmod +x /usr/local/bin/syncByNtp && sed -i '7 a syncByNtp &' /usr/local/bin/etupdate && systemctl stop systemd-timesyncd.service && systemctl disable systemd-timesyncd.service
-        tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/rc.local) && echo "$tmpScript" > /etc/rc.local
-        echo "$newVer" > /etc/etransver
-      fi
-    #fi
-    exit 64
-  # no fallthru here 
-    ;;
-  20180613)
-    notify "Updating to v.20180911"
-    check_update 20180911
-    apt-get install -y pigpio python-pigpio python3-pigpio && sed -i -- 's/pigpiod -l/pigpiod/g' /lib/systemd/system/pigpiod.service && systemctl enable pigpiod.service && systemctl start pigpiod.service && sed -i -- 's/20180613/20180911/g' /etc/etransver
-    ;&
-  20180911)
-    newVer="20181005"
-    notify "Updating to $newVer"
-  #  check_update $newVer
-    #if [ "0000000019438c0c" = "$myVal" ]
-    #then
-      check_update "$newVer"
-      sed -i -- 's/maxfail 3/maxfail 5/g' /usr/local/bin/xgconn
-      tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/syncByGps) && echo "$tmpScript" > /usr/local/bin/gpstimesync
-      apt-get install -y ntpdate
-      if [ $? -eq 0 ]
-      then
-        wget -P /usr/local/bin/ https://raw.githubusercontent.com/D2Edev/et2/master/syncByNtp && chmod +x /usr/local/bin/syncByNtp && sed -i '7 a syncByNtp &' /usr/local/bin/etupdate && systemctl stop systemd-timesyncd.service && systemctl disable systemd-timesyncd.service
-        tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/rc.local) && echo "$tmpScript" > /etc/rc.local
-        sed -i -- 's/20180911/20181005/g' /etc/etransver
-      fi
-    #fi
-    exit 64
-  # no fallthru here 
-    ;;
-   20181001)
-    newVer="20181201"
-    notify "Updating to $newVer"
-    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/send2port) && echo "$tmpScript" > /usr/local/bin/send2port && chmod +x /usr/local/bin/send2port && echo "$newVer" > /etc/etransver 
-    exit 0
-  # no fallthru here 
-    ;;
-   20181002)
-    newVer="20181202"
-    notify "Updating to $newVer"
-    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/send2port) && echo "$tmpScript" > /usr/local/bin/send2port && chmod +x /usr/local/bin/send2port && echo "$newVer" > /etc/etransver 
-    exit 0
-  # no fallthru here 
-    ;;
-  20181005)
-    newVer="20181214"
-    notify "Updating to $newVer"
-    apt-get install -y i2c-tools
-    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/send2port) && echo "$tmpScript" > /usr/local/bin/send2port && chmod +x /usr/local/bin/send2port
-    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/96-usb3g4gmodem.rules) && echo "$tmpScript" > /lib/udev/rules.d/96-usb3g4gmodem.rules
-    sed -i -- 's/DEVICES="\/dev\/gps0"/DEVICES=""/g' /etc/default/gpsd
-    sed -i -- 's/#dtparam=i2c_arm=on/dtparam=i2c_arm=on/g' /boot/config.txt
-    echo "$newVer" > /etc/etransver
-    # fallthru
-    ;&
-  20181214)
-    newVer="20190110"
-    notify "Updating to $newVer"
-    # switch to wpa_supplicant as wifi manager
-    mkdir /usr/local/conf
-    chown etrans:etrans /usr/local/conf
-    sudo -u etrans chmod 775 /usr/local/conf
-    sudo -u etrans mkdir /usr/local/conf/wpa_supplicant
-    mv /etc/wpa_supplicant/wpa_supplicant.conf /usr/local/conf/wpa_supplicant
-    echo -e "\n\nnetwork={" >> /usr/local/conf/wpa_supplicant/wpa_supplicant.conf
-    echo -e "mode=2" >> /usr/local/conf/wpa_supplicant/wpa_supplicant.conf
-    cpuid=$(cat /proc/cpuinfo | grep -Po '([0-9abcdef]{16})')
-    echo -e "ssid=\"PiAP_$cpuid\"" >> /usr/local/conf/wpa_supplicant/wpa_supplicant.conf
-    echo "psk=\"4321oleg\"" >> /usr/local/conf/wpa_supplicant/wpa_supplicant.conf
-    echo "key_mgmt=WPA-PSK" >> /usr/local/conf/wpa_supplicant/wpa_supplicant.conf
-    echo "frequency=2437" >> /usr/local/conf/wpa_supplicant/wpa_supplicant.conf
-    echo "}" >> /usr/local/conf/wpa_supplicant/wpa_supplicant.conf
-    chown etrans:etrans /usr/local/conf/wpa_supplicant/wpa_supplicant.conf
-    sudo -u etrans chmod 775 /usr/local/conf/wpa_supplicant/wpa_supplicant.conf
-    cd /etc/wpa_supplicant
-    ln -s /usr/local/conf/wpa_supplicant/wpa_supplicant.conf
-    systemctl disable hostapd.service
-    systemctl stop hostapd.service
-    # update messaging
-    sed -i -- 's/mstate connected/mstate to:services.modem data:connected/g' /etc/ppp/ip-up.d/3g_conn
-    sed -i -- 's/mstate disconnected/mstate to:services.modem data:disconnected/g' /etc/ppp/ip-down.d/3g_dconn
-    # tune routing
-    sed -i '/routers=192.168.3.1/d' /etc/dhcpcd.conf
-    sed -i '/domain_name_servers=8.8.8.8/d' /etc/dhcpcd.conf
-    sed -i '/route add/d' /etc/ppp/ip-up.d/3g_conn
-    sed -i -- 's/#sudo ip/ip/g' /etc/ppp/ip-up.d/3g_conn
-    sed -i '/iptables/d' /etc/ppp/ip-down.d/3g_dconn
-    echo "iptables -t nat -D POSTROUTING -o ppp0 -j MASQUERADE" >> /etc/ppp/ip-down.d/3g_dconn
-    echo "iptables -D FORWARD -i ppp0 -o wlan0 -m state --state RELATED,ESTABLISHED -j ACCEPT" >> /etc/ppp/ip-down.d/3g_dconn
-    echo "iptables -D FORWARD -i wlan0 -o ppp0 -j ACCEPT" >> /etc/ppp/ip-down.d/3g_dconn
-#    sed -i -e '$a\' -e 'iptables -t nat -D POSTROUTING -o ppp0 -j MASQUERADE' /etc/ppp/ip-down.d/3g_dconn
-#    sed -i -e '$a\' -e 'iptables -D FORWARD -i ppp0 -o wlan0 -m state --state RELATED,ESTABLISHED -j ACCEPT' /etc/ppp/ip-down.d/3g_dconn
-#    sed -i -e '$a\' -e 'iptables -A FORWARD -i wlan0 -o ppp0 -j ACCEPT' /etc/ppp/ip-down.d/3g_dconn
-    # i2c tume
-    echo "i2c-dev" >> /etc/modules
-    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/shieldcheck) && echo "$tmpScript" > /usr/local/bin/shieldcheck && chmod +x /usr/local/bin/shieldcheck
-    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/shieldcheck.service) && echo "$tmpScript" > /lib/systemd/system/shieldcheck.service
-    systemctl enable shieldcheck.service
-    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/rc.local) && echo "$tmpScript" > /etc/rc.local && chmod +x /etc/rc.local
-    echo "$newVer" > /etc/etransver
-    exit 64
-  # no fallthru here 
-    ;;
   20190110)
     myVal=$(cat /proc/cpuinfo | grep -Po '([0-9,a-f]{16})')
 #    if [ "0000000019438c0c" != "$myVal" ]
@@ -179,6 +41,7 @@ case "$etver" in
     fi
     newVer="20190124"
     notify "Updating to $newVer"
+    resourceURL="https://raw.githubusercontent.com/D2Edev/et2/master/$newVer/"
     # for old files and scripts
     mkdir /usr/local/old
     # enable rtc support
@@ -190,7 +53,7 @@ case "$etver" in
     systemctl disable shieldcheck.service
     systemctl stop shieldcheck.service
     rm /lib/systemd/system/shieldcheck.service
-    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/shieldcheck.service) && echo "$tmpScript" > /etc/systemd/system/shieldcheck.service
+    tmpScript=$(wget --no-cache -qO- "$resourceURL"shieldcheck.service) && echo "$tmpScript" > /etc/systemd/system/shieldcheck.service
     #sed -i -- 's/pigpiod\.service/sysinit\.target\nRequires=sysinit\.target/g' /etc/systemd/system/shieldcheck.service
     #sed -i -- 's/multi-user\.target/basic\.target/g' /etc/systemd/system/shieldcheck.service
     # fix shield check
@@ -209,52 +72,56 @@ case "$etver" in
     notify "Updating wpa"
     mkdir -p /usr/local/conf/wpa_supplicant/
     mkdir -p /usr/local/conf/tunnel
-    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/configureAP) && echo "$tmpScript" > /usr/local/conf/configureAP && chmod +x /usr/local/conf/configureAP
-    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/wpa_supplicant.tmpl) && echo "$tmpScript" > /usr/local/conf/wpa_supplicant.tmpl
+    tmpScript=$(wget --no-cache -qO- "$resourceURL"configureAP) && echo "$tmpScript" > /usr/local/conf/configureAP && chmod +x /usr/local/conf/configureAP
+    tmpScript=$(wget --no-cache -qO- "$resourceURL"wpa_supplicant.tmpl) && echo "$tmpScript" > /usr/local/conf/wpa_supplicant.tmpl
     if [ ! -f /usr/local/conf/wpa_supplicant/wpa_supplicant.tmpl ]; then cp /usr/local/conf/wpa_supplicant.tmpl /usr/local/conf/wpa_supplicant/wpa_supplicant.conf; fi
-    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/wpa_conf.service) && echo "$tmpScript" > /etc/systemd/system/wpa_conf.service
+    tmpScript=$(wget --no-cache -qO- "$resourceURL"wpa_conf.service) && echo "$tmpScript" > /etc/systemd/system/wpa_conf.service
     rm /etc/wpa_supplicant/wpa_supplicant.conf
     sudo cp -s /usr/local/conf/wpa_supplicant/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf
     # xconnect service
     notify "Updating xconn"
-    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/xconnect.service) && echo "$tmpScript" > /etc/systemd/system/xconnect.service
+    tmpScript=$(wget --no-cache -qO- "$resourceURL"xconnect.service) && echo "$tmpScript" > /etc/systemd/system/xconnect.service
     rm /usr/local/bin/xgconn
     #tunnel service
     notify "Updating tunnel"
-    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/mktunnel) && echo "$tmpScript" > /usr/local/conf/mktunnel && chmod +x /usr/local/conf/mktunnel
-    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/ptunnel) && echo "$tmpScript" > /usr/local/conf/ptunnel && chmod +x /usr/local/conf/ptunnel 
-    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/tunnel.service) && echo "$tmpScript" > /etc/systemd/system/tunnel.service
+    tmpScript=$(wget --no-cache -qO- "$resourceURL"mktunnel) && echo "$tmpScript" > /usr/local/conf/mktunnel && chmod +x /usr/local/conf/mktunnel
+    tmpScript=$(wget --no-cache -qO- "$resourceURL"ptunnel) && echo "$tmpScript" > /usr/local/conf/ptunnel && chmod +x /usr/local/conf/ptunnel 
+    tmpScript=$(wget --no-cache -qO- "$resourceURL"tunnel.service) && echo "$tmpScript" > /etc/systemd/system/tunnel.service
     rm /home/etrans/tunnel
     rm /home/etrans/.ssh   
     # clock
     notify "Updating clock"
-    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/clocks) && echo "$tmpScript" > /usr/local/conf/clocks && chmod +x /usr/local/bin/clocks
-    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/clocks.service) && echo "$tmpScript" > /etc/systemd/system/clocks.service
+    tmpScript=$(wget --no-cache -qO- "$resourceURL"clocks) && echo "$tmpScript" > /usr/local/conf/clocks && chmod +x /usr/local/conf/clocks
+    tmpScript=$(wget --no-cache -qO- "$resourceURL"clocks.service) && echo "$tmpScript" > /etc/systemd/system/clocks.service
     # ntp sync service
     notify "Updating ntpsync"
-    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/ntpsync) && echo "$tmpScript" > /usr/local/conf/ntpsync && chmod +x /usr/local/conf/ntpsync
-    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/ntpsync.service) && echo "$tmpScript" > /etc/systemd/system/ntpsync.service
+    tmpScript=$(wget --no-cache -qO- "$resourceURL"ntpsync) && echo "$tmpScript" > /usr/local/conf/ntpsync && chmod +x /usr/local/conf/ntpsync
+    tmpScript=$(wget --no-cache -qO- "$resourceURL"ntpsync.service) && echo "$tmpScript" > /etc/systemd/system/ntpsync.service
     rm /usr/local/bin/syncByNtp
     # app start service
     notify "Updating appstart"
-    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/etransapp.service) && echo "$tmpScript" > /etc/systemd/system/etransapp.service
-    # update service
+    tmpScript=$(wget --no-cache -qO- "$resourceURL"etransapp.service) && echo "$tmpScript" > /etc/systemd/system/etransapp.service
+    # sys update service
     notify "Updating sys update service"
-    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/etsys_update) && echo "$tmpScript" > /usr/local/conf/etsys_update && chmod +x /usr/local/conf/etsys_update
-    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/etsys_update.service) && echo "$tmpScript" > /etc/systemd/system/etsys_update.service
+    tmpScript=$(wget --no-cache -qO- "$resourceURL"etsys_update) && echo "$tmpScript" > /usr/local/conf/etsys_update && chmod +x /usr/local/conf/etsys_update
+    tmpScript=$(wget --no-cache -qO- "$resourceURL"etsys_update.service) && echo "$tmpScript" > /etc/systemd/system/etsys_update.service
     rm /usr/local/bin/etupdate
     rm /usr/local/bin/sysupdcheck
     # gps
     notify "Updating gpssync"
-    mpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/gpssync) && echo "$tmpScript" > /usr/local/conf/gpssync && chmod +x /usr/local/conf/gpssync
-    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/gpssync.service) && echo "$tmpScript" > /etc/systemd/system/gpssync.service
+    tmpScript=$(wget --no-cache -qO- "$resourceURL"gpssync) && echo "$tmpScript" > /usr/local/conf/gpssync && chmod +x /usr/local/conf/gpssync
+    tmpScript=$(wget --no-cache -qO- "$resourceURL"gpssync.service) && echo "$tmpScript" > /etc/systemd/system/gpssync.service
     rm /usr/local/bin/gpstimesync
     rm /usr/local/bin/waitinet
-     # gps
+    # app update
     notify "Updating app update service"
-    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/etapp_update.service) && echo "$tmpScript" > /etc/systemd/system/etapp_update.service
+    tmpScript=$(wget --no-cache -qO- "$resourceURL"etapp_update.service) && echo "$tmpScript" > /etc/systemd/system/etapp_update.service
     notify "Updating rc.local"
-    tmpScript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/rc.local) && echo "$tmpScript" > /etc/rc.local && chmod +x /etc/rc.local
+    tmpScript=$(wget --no-cache -qO- "$resourceURL"rc.local) && echo "$tmpScript" > /etc/rc.local && chmod +x /etc/rc.local
+    # waitinet
+    notify "Updating waitinet"
+    tmpScript=$(wget --no-cache -qO- "$resourceURL"waitinet) && echo "$tmpScript" > /usr/local/conf/waitinet && chmod +x /usr/local/conf/waitinet
+    tmpScript=$(wget --no-cache -qO- "$resourceURL"waitinet.service) && echo "$tmpScript" > /etc/systemd/system/waitinet.service
     notify "Updating daemons start"    
     chown etrans:etrans -R /usr/local/conf
     systemctl stop systemd-timesyncd.service
@@ -266,15 +133,18 @@ case "$etver" in
     systemctl enable shieldcheck.service
     systemctl enable clocks.service
     systemctl enable tunnel.service
-    systemctl enable xconnect.service
+    # xconnect started by udev
+    # systemctl enable xconnect.service
     systemctl enable ntpsync.service
     systemctl enable gpssync.service
+    systemctl enable waitinet.service
     systemctl enable etransapp.service
     systemctl enable etapp_update.service
     systemctl enable etsys_update.service
     echo "$newVer" > /etc/etransver
     exit 64
     ;;
+    # ;& for fallthru
   *)
     notify "Unknown local version: $etver. Exit"
     exit 1  

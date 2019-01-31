@@ -1,6 +1,6 @@
 [Unit]
 Description=Custom NTP time sync
-After=network-online.target
+After=waitinet.service
 
 [Service]
 ExecStartPre=/bin/nc -z pool.ntp.org 80

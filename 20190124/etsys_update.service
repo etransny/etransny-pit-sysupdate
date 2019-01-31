@@ -1,12 +1,11 @@
 [Unit]
 Description=Etrans system update
-After=network-online.target
-ConditionPathExists=/home/etrans/app_update
+After=waitinet.service
 
 [Service]
-User=etrans
+SuccessExitStatus=64
 ExecStartPre=/bin/nc -z raw.githubusercontent.com 443
-ExecStart=/home/etrans/app_update 2016etrans
+ExecStart=/usr/local/conf/etsys_update
 #ExecStartPost=
 Restart=on-failure
 RestartSec=30

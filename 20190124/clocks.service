@@ -1,5 +1,5 @@
 [Unit]
-Description=Daemon to restore / save the current clock (RTC and/or FAKE)
+Description=Restore/save the current clock (RTC and/or FAKE)
 After=sysinit.target
 Conflicts=shutdown.target
 

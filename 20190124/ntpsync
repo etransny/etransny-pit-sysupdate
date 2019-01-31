@@ -4,7 +4,7 @@ ntpdate -s pool.ntp.org
 if [ $? -eq 0 ]
 then
   logger -t NTPSYNC "Time Sync success"
-  clocks save
+  /usr/local/conf/clocks save
   if [ ! -e "$syncFlag" ]
   then
     touch "$syncFlag"

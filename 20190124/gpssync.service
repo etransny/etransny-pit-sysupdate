@@ -1,7 +1,7 @@
 [Unit]
 Description=Custom GPS time sync
 Requires=gpsd.service
-After=network-online.target gpsd.service
+After=gpsd.service
 
 [Service]
 ExecStart=/usr/local/conf/gpssync

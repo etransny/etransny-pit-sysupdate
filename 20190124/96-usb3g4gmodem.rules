@@ -7,8 +7,8 @@
 SUBSYSTEMS=="usb", ATTRS{bInterfaceNumber}=="03", ENV{third_port}="true"
 SUBSYSTEMS=="usb", ATTRS{bInterfaceNumber}=="00", ENV{zero_port}="true"
 SUBSYSTEMS=="usb", ATTRS{bInterfaceNumber}=="01", ENV{first_port}="true"
-ATTRS{idProduct}!="1506", ATTRS{idVendor}=="12d1", ENV{zero_port}=="true", SYMLINK+="etransmodem"
-ATTRS{idProduct}=="1506", ATTRS{idVendor}=="12d1", ENV{first_port}=="true", SYMLINK+="etransmodem"
-ATTRS{idProduct}=="0125", ATTRS{idVendor}=="2c7c", ENV{third_port}=="true", SYMLINK+="etransmodem"
+ATTRS{idProduct}!="1506", ATTRS{idVendor}=="12d1", ENV{zero_port}=="true", SYMLINK+="etransmodem", TAG+="systemd", ENV{SYSTEMD_WANTS}="xconnect.service"
+ATTRS{idProduct}=="1506", ATTRS{idVendor}=="12d1", ENV{first_port}=="true", SYMLINK+="etransmodem", TAG+="systemd", ENV{SYSTEMD_WANTS}="xconnect.service"
+ATTRS{idProduct}=="0125", ATTRS{idVendor}=="2c7c", ENV{third_port}=="true", SYMLINK+="etransmodem", TAG+="systemd", ENV{SYSTEMD_WANTS}="xconnect.service"
 ATTRS{idProduct}=="0125", ATTRS{idVendor}=="2c7c", ENV{first_port}=="true", SYMLINK+="gps%n", TAG+="systemd", ENV{SYSTEMD_WANTS}="gpsdctl@%k.service"
 

@@ -45,7 +45,7 @@ then
     date --set="$gpsDT"
     if [ $? -eq 0 ]
     then
-      /usr/local/bin/clocks save
+      /usr/local/conf/clocks save
       logger -t GPSTIMESYNC "Time Sync success"
       > "$syncFlag"
     else

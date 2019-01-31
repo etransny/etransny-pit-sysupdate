@@ -1,6 +1,6 @@
 [Unit]
 Description=Etrans app
-After=network-online.target
+After=waitinet.service
 ConditionPathExists=/home/etrans/etrans/app_start
 
 [Service]

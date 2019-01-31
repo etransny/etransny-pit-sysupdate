@@ -1,0 +1,14 @@
+[Unit]
+Description=wait for internet
+After=rc.local.service
+Conflicts=shutdown.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+ExecStart=/usr/local/conf/waitinet 
+StandardOutput=journal
+
+[Install]
+WantedBy=multi-user.target
+

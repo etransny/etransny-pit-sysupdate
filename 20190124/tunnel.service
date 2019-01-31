@@ -1,6 +1,6 @@
 [Unit]
 Description=Etrans tunnel
-After=network-online.target
+After=waitinet.service
 
 [Service]
 User=etrans
