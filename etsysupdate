@@ -57,10 +57,10 @@ case "$etver" in
     tmpScript=$(wget --no-cache -qO- "$resourceURL"shieldcheck.service) && echo "$tmpScript" > /etc/systemd/system/shieldcheck.service
     #sed -i -- 's/pigpiod\.service/sysinit\.target\nRequires=sysinit\.target/g' /etc/systemd/system/shieldcheck.service
     #sed -i -- 's/multi-user\.target/basic\.target/g' /etc/systemd/system/shieldcheck.service
-    # fix shield check
+    # fix shield check script
     sed -i -- 's/sudo i2cget/i2cget/g' /usr/local/bin/shieldcheck
     # install vnstat
-    notify "vnstat"
+    notify " installing vnstat"
     apt-get install -y vnstat
     sed -i -- 's/Interface \"eth0\"/Interface \"ppp0\"/g' /etc/vnstat.conf
     systemctl restart vnstat.service
@@ -83,7 +83,6 @@ case "$etver" in
     notify "Updating xconn"
     tmpScript=$(wget --no-cache -qO- "$resourceURL"xconnect.service) && echo "$tmpScript" > /etc/systemd/system/xconnect.service
     tmpScript=$(wget --no-cache -qO- "$resourceURL"96-usb3g4gmodem.rules) && echo "$tmpScript" > /lib/udev/rules.d/96-usb3g4gmodem.rules
-    96-usb3g4gmodem.rules
     rm /usr/local/bin/xgconn
     #tunnel service
     notify "Updating tunnel"
