@@ -35,8 +35,8 @@ case "$etver" in
   20190110)
     myVal=$(cat /proc/cpuinfo | grep -Po '([0-9,a-f]{16})')
     # 0000000007aded27
-#    if [ "0000000019438c0c" != "$myVal" ]
-    if [ "0000000007aded27" != "$myVal" ]
+    if [ "0000000019438c0c" != "$myVal" ]
+#    if [ "0000000007aded27" != "$myVal" ]
     then
       exit 0
     fi
