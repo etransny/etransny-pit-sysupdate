@@ -7,7 +7,7 @@ then
   /usr/local/conf/clocks save
   if [ ! -e "$syncFlag" ]
   then
-    touch "$syncFlag"
+    echo "ntp" > "$syncFlag"
   fi
 else
   exit 1

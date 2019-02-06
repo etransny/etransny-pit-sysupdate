@@ -6,7 +6,6 @@
 syncFlag="/tmp/syncOK"
 MAXDELTA=10;
 oneYear=31536000;
-count=0;
 
 if [ -f "$syncFlag" ]
 then
@@ -17,12 +16,14 @@ gpsTimeString=$(gpspipe 127.0.0.1:2947 -w -n 5 | grep TPV | grep -m 1 time)
 if [ -n "$gpsTimeString" ]
 then
   gpsDT=$(echo "$gpsTimeString" | sed -r 's/.*"time":"([^"]*)".*/\1/')
-  locDT="$(date -u +%Y-%m-%dT%T).000Z"
   secGPS=$(date +%s --date="$gpsDT")
+  if [ $? -ne 0 ]
+  then
+    exit 1;
+  fi
+  locDT="$(date -u +%Y-%m-%dT%T).000Z"
   secLOC=$(date +%s --date="$locDT")
-  message="UTC datetime: GPS $gpsDT  / Local $locDT"
-  logger -t GPSTIMESYNC $message
-  #echo $message
+  logger -t GPSTIMESYNC "UTC datetime: GPS $gpsDT  / Local $locDT"
   deltaT=$((secGPS - secLOC))
   if [ $deltaT -lt 0 ]
   then
@@ -30,7 +31,7 @@ then
   fi
   if [ $delta -gt $oneYear ]
   then
-    logger -t GPSTIMESYNC "Difference too big ($delta sec). Skipping sync"
+    logger -t GPSTIMESYNC "Difference between satellite and local time too big: $delta sec. Skipping sync"
     exit 0
   fi
   if [ -f "$syncFlag" ]
@@ -47,12 +48,12 @@ then
     then
       /usr/local/conf/clocks save
       logger -t GPSTIMESYNC "Time Sync success"
-      > "$syncFlag"
+      echo "gps" > "$syncFlag"
     else
       exit 1
     fi
   else
-    logger -t GPSTIMESYNC "delta is $deltaT sync NOT needed"
+    logger -t GPSTIMESYNC "Difference is $deltaT sec., sync NOT needed"
   fi
 else
   exit 1
