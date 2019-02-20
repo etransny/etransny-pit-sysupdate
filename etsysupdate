@@ -40,10 +40,11 @@ case "$etver" in
     # 00000000860aa738 - 2048
     # 000000001de5f886 - 2054
     # 00000000d22f6dd9 - 2052
-    # 00000000aee84a62
+    # 00000000aee84a62 - 2005 Kharkov test
     # 0000000007aded27
     # 0000000019438c0c
-    if [ "00000000aee84a62" != "$myVal" ]
+    # 000000004a6acad4
+    if [ "000000004a6acad4" != "$myVal" ]
     then
       exit 0
     fi
@@ -97,7 +98,7 @@ case "$etver" in
     tmpScript=$(wget --no-cache -qO- "$resourceURL"ptunnel) && echo "$tmpScript" > /usr/local/conf/ptunnel && chmod +x /usr/local/conf/ptunnel 
     tmpScript=$(wget --no-cache -qO- "$resourceURL"tunnel.service) && echo "$tmpScript" > /etc/systemd/system/tunnel.service
     rm /home/etrans/tunnel
-    rm /home/etrans/.ssh   
+    rm -rf /home/etrans/.ssh   
     # clock
     notify "Updating clock"
     tmpScript=$(wget --no-cache -qO- "$resourceURL"clocks) && echo "$tmpScript" > /usr/local/conf/clocks && chmod +x /usr/local/conf/clocks
