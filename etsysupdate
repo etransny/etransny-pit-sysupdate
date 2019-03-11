@@ -153,7 +153,21 @@ case "$etver" in
     echo "$newVer" > /etc/etransver
     exit 64
     ;;
-    # ;& for fallthru
+#    ;& # for fallthru
+20190124)
+    myVal=$(cat /proc/cpuinfo | grep -Po '([0-9,a-f]{16})')
+    # 00000000aee84a62 - 2005 Kharkov test-no-shield
+    # 0000000019438c0c - 2000 Kharkov test-shield
+    if [ "0000000019438c0c" != "$myVal" ]
+    then
+      exit 0
+    fi
+    newVer="20190311"
+    notify "Updating to $newVer"
+    resourceURL="https://raw.githubusercontent.com/D2Edev/et2/master/$newVer/"
+    sed -i -r -- 's/(User=etrans)/\1\nType=forking/g' /etc/systemd/system/etapp_update.service
+    echo "$newVer" > /etc/etransver
+    ;;
   *)
     notify "Unknown local version: $etver. Exit"
     exit 1  
