@@ -155,13 +155,13 @@ case "$etver" in
     ;;
 #    ;& # for fallthru
 20190124)
-    myVal=$(cat /proc/cpuinfo | grep -Po '([0-9,a-f]{16})')
+#    myVal=$(cat /proc/cpuinfo | grep -Po '([0-9,a-f]{16})')
     # 00000000aee84a62 - 2005 Kharkov test-no-shield
     # 0000000019438c0c - 2000 Kharkov test-shield
-    if [ "0000000019438c0c" != "$myVal" ]
-    then
-      exit 0
-    fi
+#    if [ "0000000019438c0c" != "$myVal" ]
+#    then
+#      exit 0
+#    fi
     newVer="20190311"
     notify "Updating to $newVer"
     resourceURL="https://raw.githubusercontent.com/D2Edev/et2/master/$newVer/"
