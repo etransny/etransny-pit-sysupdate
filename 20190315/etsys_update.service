@@ -1,0 +1,15 @@
+[Unit]
+Description=Etrans system update
+After=waitinet.service
+
+[Service]
+Type=forking
+SuccessExitStatus=64
+ExecStartPre=/bin/nc -z raw.githubusercontent.com 443
+ExecStart=/usr/local/conf/etsys_update
+#ExecStartPost=
+Restart=on-failure
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target

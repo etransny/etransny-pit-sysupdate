@@ -1,0 +1,172 @@
+#!/bin/bash
+#helper functions
+#Linux raspberrypi 4.9.41-v7+ #1023 SMP Tue Aug 8 16:00:15 BST 2017 armv7l GNU/Linux
+
+
+clean_tmp(){
+  rm -rf /tmp/etran*
+}
+
+notify(){
+#  logger -t $app "$*"
+  echo "$*"
+}
+
+update_from_tmp(){
+  if [ -e etrans.zip ]
+  then
+#    echo -en "\033[32;1;40mBacking existing archive to etrans.old\033[0m\n"
+    mv -f etrans.zip old.etrans.zip
+  fi
+  ps ux | grep -P 'Duser\.timezone' | grep -v 'grep' > /dev/null
+  if [ $? -eq 0 ]
+  then
+    notify "App running, stopping..."
+    runned=true
+    send2port 41000 stop_all
+    sleep 5
+    pkill -f java
+  else
+    runned=false
+  fi
+  rm -f ~/etrans/base/*.jar
+  rm -f ~/etrans/gps/*.jar
+  rm -f ~/etrans/control/*.jar
+  rm -f ~/etrans/cam/*.jar
+  rm -f ~/etrans/lib/components*.jar
+  cp -r /tmp/etrans ./
+  mv /tmp/etrans.zip ./
+  clean_tmp
+  notify "App update success"
+  if [ $runned = true ]
+  then
+    notify "Starting previously run app..."
+    ~/etrans/./app_start
+  fi
+}
+
+download_and_extract_libs(){
+  listFile="/tmp/etrans/libs.txt"
+  urlPrefix="https://storage.googleapis.com/etranspi-update/libs"
+  destination=/tmp/etrans/lib
+  currentList=$(ls etrans/lib)
+  res=0;
+  if [ -e $listFile ]
+  then
+    while IFS='' read -r line || [[ -n "$line" ]]; do
+      result="$(echo $currentList | grep $line)"
+      if [ $? -ne 0 ]
+      then
+        notify "Lib $line missing, starting download..."
+        wget -P $destination "$urlPrefix/$line"
+        if [ $? -eq 0 ]
+        then
+          notify "$line : download ok"
+        else
+          notify "$line : download failed. Update aborted"
+          clean_tmp
+        fi
+      fi
+    done < "$listFile"
+    update_from_tmp
+  else
+    notify "No libs list file detected, list verification impossible, aborting update"
+    clean_tmp
+  fi  
+}
+
+extract_files(){
+  7z x /tmp/etrans.zip -p$arch_pwd -y -o/tmp
+  if [ $? -eq 0 ]
+  then
+    notify "App extract ok"
+    download_and_extract_libs
+  else
+    notify "Extract failure - check achive and/or password!"
+    clean_tmp
+  fi
+}
+
+download_and_extract_app(){
+  wget -q --no-cache -P /tmp "$baseURL/etrans.zip"
+  if [ $? -eq 0 ]
+  then
+    #if download success
+    notify "App dowload success, extracting..."
+    extract_files
+  else
+    notify "App dowload failure - check if connection is ok and archive is available remotely!"
+    clean_tmp
+  fi
+}
+
+update_app(){
+  notify "$appbuild type selected!"
+  cd /home/etrans
+  #software deployment
+  #app part
+  baseURL="https://raw.githubusercontent.com/etransny/etransny-pit-app-$appbuild/master"
+  tmp=$(wget --no-cache -qO- "$baseURL/etrans.md5")
+  if [ $? -ne 0 ]
+  then
+    notify "No remote checksum file - exit"
+  else
+    newMD5=$(echo $tmp | grep -Po '^\w*')
+    if [ -z $newMD5 ]
+    then
+      notify "No checksum data in remote file - exit"
+    else
+      #download and process app archive only if checksums do not match!
+      if [ -e etrans.zip ]
+      then
+        appMD5=$(md5sum etrans.zip | grep -Po '^\w*');
+        notify "remote app archive checksum: $newMD5"
+        notify "local app archive checksum: $appMD5"
+        if [ "$appMD5" != "$newMD5" ]
+        then
+          notify "Checksums differ, starting download..."
+          download_and_extract_app
+        else
+          notify "Local and remote app archives match - no download needed"
+        fi
+      else
+        notify "No local app archive - starting force download"
+        download_and_extract_app
+      fi
+    fi
+  fi
+}
+
+
+app="ETRANS_CLIENT_UPDATER"
+typeFile="type"
+arch_pwd=$1
+if [ -z "$arch_pwd" ]
+then
+  notify "Password not provided. Update aborted"
+  exit 0
+fi
+# cli build type argument overrides default and/or file-read value
+appbuild=$2
+# if cli built type not provided, first we look for "type" file with build type set
+if [ -z "$appbuild" ]
+then
+  if [ -f "$typeFile" ]
+  then
+    appbuild=$(head -n 1 "$typeFile")
+    if [ -z "$appbuild" ]
+    then
+      appbuild="prod"      
+    fi
+  else
+    appbuild="prod"
+  fi
+fi
+case "$appbuild" in
+	special | dev | prod)
+		update_app
+		;;
+	*)
+		notify "Exit. Unknown build type $appbuild"
+esac
+

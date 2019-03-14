@@ -1,1 +1,0 @@
-sed -i -r -- "s/(^ssid=).+/\1PiAP_$(cat /proc/cpuinfo | grep -Po '([0-9abcdef]{16})')/" /etc/hostapd/hostapd.conf
