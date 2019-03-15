@@ -1,6 +1,7 @@
 #!/bin/bash
-#helper functions
-#Linux raspberrypi 4.9.41-v7+ #1023 SMP Tue Aug 8 16:00:15 BST 2017 armv7l GNU/Linux
+
+# operates in HOME of user under which is started!
+# should be started under etrans?
 
 
 clean_tmp(){
@@ -13,10 +14,9 @@ notify(){
 }
 
 update_from_tmp(){
-  if [ -e etrans.zip ]
+  if [ -e "$homeDir/etrans.zip" ]
   then
-#    echo -en "\033[32;1;40mBacking existing archive to etrans.old\033[0m\n"
-    mv -f etrans.zip old.etrans.zip
+    mv -f "$homeDir/etrans.zip" "$homeDir/old.etrans.zip"
   fi
   ps ux | grep -P 'Duser\.timezone' | grep -v 'grep' > /dev/null
   if [ $? -eq 0 ]
@@ -29,19 +29,19 @@ update_from_tmp(){
   else
     runned=false
   fi
-  rm -f ~/etrans/base/*.jar
-  rm -f ~/etrans/gps/*.jar
-  rm -f ~/etrans/control/*.jar
-  rm -f ~/etrans/cam/*.jar
-  rm -f ~/etrans/lib/components*.jar
-  cp -r /tmp/etrans ./
+  rm -f "$homeDir/etrans/base/*.jar"
+  rm -f "$homeDir/etrans/gps/*.jar"
+  rm -f "$homeDir/etrans/control/*.jar"
+  rm -f "$homeDir/etrans/cam/*.jar"
+  rm -f "$homeDir/etrans/lib/components*.jar"
+  cp -r /tmp/etrans "$homeDir"
   mv /tmp/etrans.zip ./
   clean_tmp
   notify "App update success"
   if [ $runned = true ]
   then
     notify "Starting previously run app..."
-    ~/etrans/./app_start
+    "$homeDir/etrans/./app_start"
   fi
 }
 
@@ -101,11 +101,10 @@ download_and_extract_app(){
 }
 
 update_app(){
-  notify "$appbuild type selected!"
-  cd /home/etrans
+  notify "$bldSelect type selected!"
   #software deployment
   #app part
-  baseURL="https://raw.githubusercontent.com/etransny/etransny-pit-app-$appbuild/master"
+  baseURL="https://raw.githubusercontent.com/etransny/etransny-pit-app-$bldSelect/master"
   tmp=$(wget --no-cache -qO- "$baseURL/etrans.md5")
   if [ $? -ne 0 ]
   then
@@ -117,9 +116,9 @@ update_app(){
       notify "No checksum data in remote file - exit"
     else
       #download and process app archive only if checksums do not match!
-      if [ -e etrans.zip ]
+      if [ -e "$homeDir/etrans.zip" ]
       then
-        appMD5=$(md5sum etrans.zip | grep -Po '^\w*');
+        appMD5=$(md5sum "$homeDir/etrans.zip" | grep -Po '^\w*');
         notify "remote app archive checksum: $newMD5"
         notify "local app archive checksum: $appMD5"
         if [ "$appMD5" != "$newMD5" ]
@@ -139,7 +138,8 @@ update_app(){
 
 
 app="ETRANS_CLIENT_UPDATER"
-typeFile="type"
+homeDir=$(eval echo "~/")
+bldTypeFile="$homeDir/etappbuild"
 arch_pwd=$1
 if [ -z "$arch_pwd" ]
 then
@@ -147,26 +147,26 @@ then
   exit 0
 fi
 # cli build type argument overrides default and/or file-read value
-appbuild=$2
+bldSelect=$2
 # if cli built type not provided, first we look for "type" file with build type set
-if [ -z "$appbuild" ]
+if [ -z "$bldSelect" ]
 then
-  if [ -f "$typeFile" ]
+  if [ -f "$bldTypeFile" ]
   then
-    appbuild=$(head -n 1 "$typeFile")
-    if [ -z "$appbuild" ]
+    bldSelect=$(head -n 1 "$bldTypeFile")
+    if [ -z "$bldSelect" ]
     then
-      appbuild="prod"      
+      bldSelect="prod"      
     fi
   else
-    appbuild="prod"
+    bldSelect="prod"
   fi
 fi
-case "$appbuild" in
+case "$bldSelect" in
 	special | dev | prod)
 		update_app
 		;;
 	*)
-		notify "Exit. Unknown build type $appbuild"
+		notify "Exit. Unknown build type $bldSelect"
 esac
 

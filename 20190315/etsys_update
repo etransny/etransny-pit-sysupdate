@@ -3,12 +3,13 @@
 #Linux raspberrypi 4.9.41-v7+ #1023 SMP Tue Aug 8 16:00:15 BST 2017 armv7l GNU/Linux
 
 notify(){
-  logger -t "$app" "$*"
+#  logger -t "$app" "$*"
   echo "$*"
 }
 
-app=SYSUPDATE
-tmpDir=/tmp
+app="SYSUPDATE"
+tmpDir="/tmp"
+baseURL="https://raw.githubusercontent.com/etransny/etransny-pit-sysupdate/master"
 #check local ver
 if [ -e /etc/etransver ]
 then
@@ -23,7 +24,7 @@ else
   exit 0
 fi
 #check remote ver
-ver=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/ver)
+ver=$(wget --no-cache -qO- "$baseURL/ver")
 if [ $? -ne 0 ]
 then
   notify "Error getting remote ver file - exit"
@@ -35,13 +36,13 @@ then
   exit 0
 fi
 
-md5remote=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/etsysupdate.md5)
+md5remote=$(wget --no-cache -qO- "$baseURL/etsysupdate.md5")
 if [ $? -ne 0 ]
 then
   notify "Error getting remote MD5 - exit"
-  exit 1
+  exit 0
 fi
-uscript=$(wget --no-cache -qO- https://raw.githubusercontent.com/D2Edev/et2/master/etsysupdate)
+uscript=$(wget --no-cache -qO- "$baseURL/etsysupdate")
 if [ $? -ne 0 ]
 then
   notify "Error getting remote script - exit"
@@ -56,15 +57,18 @@ then
   notify "Exit code: $result"
   if [ $result -eq 64 ]
   then
-    logger -t ETUPDATE "Reboot needed, proceeeding.."
+    notify "Reboot needed, proceeeding.."
     send2port 41000 stop_all
     sleep 5
     shutdown -r now
+  else
+    if [ -e /home/etrans/app_update ]
+    then
+      sudo -u etrans
+    fi
   fi
-  exit $result
 else
-  notify "local: $md5local, remote: $md5remote. No match, aborting"
-  exit 0
+  notify "local: $md5local, remote: $md5remote. No MD5 match, aborting"
 fi
 
 
