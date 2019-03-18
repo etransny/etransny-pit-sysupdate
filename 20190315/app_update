@@ -4,13 +4,14 @@
 # should be started under etrans?
 
 
-clean_tmp(){
-  rm -rf /tmp/etran*
-}
-
 notify(){
 #  logger -t $app "$*"
   echo "$*"
+}
+
+clean_tmp(){
+  notify "Cleaning temp..."
+  rm -rf /tmp/etran*
 }
 
 update_from_tmp(){
@@ -35,7 +36,7 @@ update_from_tmp(){
   rm -f "$homeDir/etrans/cam/*.jar"
   rm -f "$homeDir/etrans/lib/components*.jar"
   cp -r /tmp/etrans "$homeDir"
-  mv /tmp/etrans.zip ./
+  mv /tmp/etrans.zip "$homeDir"
   clean_tmp
   notify "App update success"
   if [ $runned = true ]
@@ -101,7 +102,6 @@ download_and_extract_app(){
 }
 
 update_app(){
-  notify "$bldSelect type selected!"
   #software deployment
   #app part
   baseURL="https://raw.githubusercontent.com/etransny/etransny-pit-app-$bldSelect/master"
@@ -126,7 +126,7 @@ update_app(){
           notify "Checksums differ, starting download..."
           download_and_extract_app
         else
-          notify "Local and remote app archives match - no download needed"
+          notify "Local and remote app archives match - no update needed"
         fi
       else
         notify "No local app archive - starting force download"
@@ -164,9 +164,10 @@ then
 fi
 case "$bldSelect" in
 	special | dev | prod)
+	  notify "Deploy type [$bldSelect] selected!"
 		update_app
 		;;
 	*)
-		notify "Exit. Unknown build type $bldSelect"
+		notify "Exit. Unknown deploy type [$bldSelect] provided"
 esac
 
