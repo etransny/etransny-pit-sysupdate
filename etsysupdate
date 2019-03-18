@@ -172,10 +172,10 @@ case "$etver" in
     myVal=$(cat /proc/cpuinfo | grep -Po '([0-9,a-f]{16})')
 #     00000000aee84a62 - 2005 Kharkov test-no-shield
 #     0000000019438c0c - 2000 Kharkov test-shield
-    if [ "00000000aee84a62" != "$myVal" ]
-    then
-      exit 0
-    fi
+#    if [ "00000000aee84a62" != "$myVal" ]
+#    then
+#      exit 0
+#    fi
     newVer="20190315"
     notify "Updating to $newVer"
     notify "Updating app update script"
