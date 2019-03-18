@@ -178,15 +178,14 @@ case "$etver" in
     fi
     newVer="20190315"
     notify "Updating to $newVer"
-    notify "Updating sys update service"
+    notify "Updating app update script"
     resourceURL="https://raw.githubusercontent.com/D2Edev/et2/master/$newVer/"
     tmpScript=$(wget --no-cache -qO- "$resourceURL"app_update) && sudo -u etrans echo "$tmpScript" > /home/etrans/app_update && chmod +x /home/etrans/app_update
     notify "Updating sys update service"
     tmpScript=$(wget --no-cache -qO- "$resourceURL"etsys_update) && echo "$tmpScript" > /usr/local/conf/etsys_update && chmod +x /usr/local/conf/etsys_update
     tmpScript=$(wget --no-cache -qO- "$resourceURL"etsys_update.service) && echo "$tmpScript" > /etc/systemd/system/etsys_update.service
-    systemctl disable etapp_update.service
-    systemctl daemon-reload
     echo "$newVer" > /etc/etransver
+    exit 64
     ;;
   *)
     notify "Unknown local version: $etver. Exit"

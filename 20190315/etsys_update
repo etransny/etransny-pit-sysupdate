@@ -61,11 +61,6 @@ then
     send2port 41000 stop_all
     sleep 5
     shutdown -r now
-  else
-    if [ -e /home/etrans/app_update ]
-    then
-      sudo -u etrans /home/etrans/app_update
-    fi
   fi
 else
   notify "local: $md5local, remote: $md5remote. No MD5 match, aborting"

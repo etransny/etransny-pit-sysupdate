@@ -3,7 +3,8 @@ Description=Etrans system update
 After=waitinet.service
 
 [Service]
-Type=forking
+Type=oneshot
+RemainAfterExit=true
 SuccessExitStatus=64
 ExecStartPre=/bin/nc -z raw.githubusercontent.com 443
 ExecStart=/usr/local/conf/etsys_update
