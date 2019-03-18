@@ -154,7 +154,7 @@ case "$etver" in
     exit 64
     ;;
 #    ;& # for fallthru
-20190124)
+  20190124)
 #    myVal=$(cat /proc/cpuinfo | grep -Po '([0-9,a-f]{16})')
     # 00000000aee84a62 - 2005 Kharkov test-no-shield
     # 0000000019438c0c - 2000 Kharkov test-shield
@@ -171,7 +171,7 @@ case "$etver" in
   *)
     notify "Unknown local version: $etver. Exit"
     ;;
-20190311)
+  20190311)
     myVal=$(cat /proc/cpuinfo | grep -Po '([0-9,a-f]{16})')
 #     00000000aee84a62 - 2005 Kharkov test-no-shield
 #     0000000019438c0c - 2000 Kharkov test-shield
