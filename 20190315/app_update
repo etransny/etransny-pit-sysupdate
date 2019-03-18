@@ -50,7 +50,7 @@ download_and_extract_libs(){
   listFile="/tmp/etrans/libs.txt"
   urlPrefix="https://storage.googleapis.com/etranspi-update/libs"
   destination=/tmp/etrans/lib
-  currentList=$(ls etrans/lib)
+  currentList=$(ls "$homeDir/etrans/lib")
   res=0;
   if [ -e $listFile ]
   then
