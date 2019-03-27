@@ -1,0 +1,20 @@
+[Unit]
+Description=Etrans app
+#After=basic.target
+Requires=network.target
+After=network.target
+ConditionPathExists=/home/etrans/etrans/app_start
+
+[Service]
+User=etrans
+Type=forking
+WorkingDirectory=/home/etrans
+ExecStartPre=/usr/bin/[ -f /tmp/syncOK ]
+ExecStart=/home/etrans/etrans/app_start
+ExecStop=/usr/local/bin/send2port 41000 stop_all
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+

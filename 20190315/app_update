@@ -34,6 +34,7 @@ update_from_tmp(){
   rm -f "$homeDir/etrans/gps/*.jar"
   rm -f "$homeDir/etrans/control/*.jar"
   rm -f "$homeDir/etrans/cam/*.jar"
+  rm -f "$homeDir/etrans/gpio/*.jar"
   rm -f "$homeDir/etrans/lib/components*.jar"
   cp -r /tmp/etrans "$homeDir"
   mv /tmp/etrans.zip "$homeDir"

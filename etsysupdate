@@ -1,6 +1,17 @@
 #!/bin/bash
-# ;;/;&
+# ;; (stop) /;& (fallthru)
 # use exit code 64 to reboot system on exit
+
+# 0000000007aded27
+# 000000004c5332d9 - 2047
+# 000000002bf98ca0 - 2049
+# 00000000860aa738 - 2048
+# 000000001de5f886 - 2054
+# 00000000d22f6dd9 - 2052
+# 00000000aee84a62 - 2005 Kharkov test
+# 0000000019438c0c - 2000 Kharkov test
+# 000000004a6acad4 - 2025
+
 notify(){
   logger -t $app "$*"
 #  echo "$*"
@@ -22,9 +33,8 @@ check_update(){
 
 }
 
-
-
 app=SYSUPDATE
+baseURL="https://raw.githubusercontent.com/etransny/etransny-pit-sysupdate/master"
 if [ "$(id -u)" != "0" ]; then
 	notify "Not root"
 	exit 1
@@ -33,23 +43,9 @@ etver=$(cat /etc/etransver)
 updated=0
 case "$etver" in
   20190110)
-    myVal=$(cat /proc/cpuinfo | grep -Po '([0-9,a-f]{16})')
-    # 0000000007aded27
-    # 000000004c5332d9 - 2047
-    # 000000002bf98ca0 - 2049
-    # 00000000860aa738 - 2048
-    # 000000001de5f886 - 2054
-    # 00000000d22f6dd9 - 2052
-    # 00000000aee84a62 - 2005 Kharkov test
-    # 0000000019438c0c - 2000 Kharkov test
-    # 000000004a6acad4 - 2025
-#    if [ "000000004a6acad4" != "$myVal" ]
-#    then
-#      exit 0
-#    fi
     newVer="20190124"
     notify "Updating to $newVer"
-    resourceURL="https://raw.githubusercontent.com/D2Edev/et2/master/$newVer/"
+    updURL="$baseURL/$newVer"
     # for old files and scripts
     mkdir /usr/local/old
     # enable rtc support
@@ -61,7 +57,7 @@ case "$etver" in
     systemctl disable shieldcheck.service
     systemctl stop shieldcheck.service
     rm /lib/systemd/system/shieldcheck.service
-    tmpScript=$(wget --no-cache -qO- "$resourceURL"shieldcheck.service) && echo "$tmpScript" > /etc/systemd/system/shieldcheck.service
+    tmpScript=$(wget --no-cache -qO- "$updURL/shieldcheck.service") && echo "$tmpScript" > /etc/systemd/system/shieldcheck.service
     #sed -i -- 's/pigpiod\.service/sysinit\.target\nRequires=sysinit\.target/g' /etc/systemd/system/shieldcheck.service
     #sed -i -- 's/multi-user\.target/basic\.target/g' /etc/systemd/system/shieldcheck.service
     # fix shield check script
@@ -80,57 +76,57 @@ case "$etver" in
     notify "Updating wpa"
     mkdir -p /usr/local/conf/wpa_supplicant/
     mkdir -p /usr/local/conf/tunnel
-    tmpScript=$(wget --no-cache -qO- "$resourceURL"configureAP) && echo "$tmpScript" > /usr/local/conf/configureAP && chmod +x /usr/local/conf/configureAP
-    tmpScript=$(wget --no-cache -qO- "$resourceURL"wpa_supplicant.tmpl) && echo "$tmpScript" > /usr/local/conf/wpa_supplicant.tmpl
+    tmpScript=$(wget --no-cache -qO- "$updURL/configureAP") && echo "$tmpScript" > /usr/local/conf/configureAP && chmod +x /usr/local/conf/configureAP
+    tmpScript=$(wget --no-cache -qO- "$updURL/wpa_supplicant.tmpl") && echo "$tmpScript" > /usr/local/conf/wpa_supplicant.tmpl
     if [ ! -f /usr/local/conf/wpa_supplicant/wpa_supplicant.tmpl ]; then cp /usr/local/conf/wpa_supplicant.tmpl /usr/local/conf/wpa_supplicant/wpa_supplicant.conf; fi
-    tmpScript=$(wget --no-cache -qO- "$resourceURL"wpa_conf.service) && echo "$tmpScript" > /etc/systemd/system/wpa_conf.service
+    tmpScript=$(wget --no-cache -qO- "$updURL/wpa_conf.service") && echo "$tmpScript" > /etc/systemd/system/wpa_conf.service
     rm /etc/wpa_supplicant/wpa_supplicant.conf
     sudo cp -s /usr/local/conf/wpa_supplicant/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf
     # xconnect service
     notify "Updating xconn"
-    tmpScript=$(wget --no-cache -qO- "$resourceURL"xconnect.service) && echo "$tmpScript" > /etc/systemd/system/xconnect.service
-    tmpScript=$(wget --no-cache -qO- "$resourceURL"96-usb3g4gmodem.rules) && echo "$tmpScript" > /lib/udev/rules.d/96-usb3g4gmodem.rules
+    tmpScript=$(wget --no-cache -qO- "$updURL/xconnect.service") && echo "$tmpScript" > /etc/systemd/system/xconnect.service
+    tmpScript=$(wget --no-cache -qO- "$updURL/96-usb3g4gmodem.rules") && echo "$tmpScript" > /lib/udev/rules.d/96-usb3g4gmodem.rules
     rm /usr/local/bin/xgconn
     #tunnel service
     notify "Updating tunnel"
-    tmpScript=$(wget --no-cache -qO- "$resourceURL"mktunnel) && echo "$tmpScript" > /usr/local/conf/mktunnel && chmod +x /usr/local/conf/mktunnel
-    tmpScript=$(wget --no-cache -qO- "$resourceURL"ptunnel) && echo "$tmpScript" > /usr/local/conf/ptunnel && chmod +x /usr/local/conf/ptunnel 
-    tmpScript=$(wget --no-cache -qO- "$resourceURL"tunnel.service) && echo "$tmpScript" > /etc/systemd/system/tunnel.service
+    tmpScript=$(wget --no-cache -qO- "$updURL/mktunnel") && echo "$tmpScript" > /usr/local/conf/mktunnel && chmod +x /usr/local/conf/mktunnel
+    tmpScript=$(wget --no-cache -qO- "$updURL/ptunnel") && echo "$tmpScript" > /usr/local/conf/ptunnel && chmod +x /usr/local/conf/ptunnel 
+    tmpScript=$(wget --no-cache -qO- "$updURL/tunnel.service") && echo "$tmpScript" > /etc/systemd/system/tunnel.service
     rm /home/etrans/tunnel
     rm -rf /home/etrans/.ssh   
     # clock
     notify "Updating clock"
-    tmpScript=$(wget --no-cache -qO- "$resourceURL"clocks) && echo "$tmpScript" > /usr/local/conf/clocks && chmod +x /usr/local/conf/clocks
-    tmpScript=$(wget --no-cache -qO- "$resourceURL"clocks.service) && echo "$tmpScript" > /etc/systemd/system/clocks.service
+    tmpScript=$(wget --no-cache -qO- "$updURL/clocks") && echo "$tmpScript" > /usr/local/conf/clocks && chmod +x /usr/local/conf/clocks
+    tmpScript=$(wget --no-cache -qO- "$updURL/clocks.service") && echo "$tmpScript" > /etc/systemd/system/clocks.service
     # ntp sync service
     notify "Updating ntpsync"
-    tmpScript=$(wget --no-cache -qO- "$resourceURL"ntpsync) && echo "$tmpScript" > /usr/local/conf/ntpsync && chmod +x /usr/local/conf/ntpsync
-    tmpScript=$(wget --no-cache -qO- "$resourceURL"ntpsync.service) && echo "$tmpScript" > /etc/systemd/system/ntpsync.service
+    tmpScript=$(wget --no-cache -qO- "$updURL/ntpsync") && echo "$tmpScript" > /usr/local/conf/ntpsync && chmod +x /usr/local/conf/ntpsync
+    tmpScript=$(wget --no-cache -qO- "$updURL/ntpsync.service") && echo "$tmpScript" > /etc/systemd/system/ntpsync.service
     rm /usr/local/bin/syncByNtp
     # app start service
     notify "Updating appstart"
-    tmpScript=$(wget --no-cache -qO- "$resourceURL"etransapp.service) && echo "$tmpScript" > /etc/systemd/system/etransapp.service
+    tmpScript=$(wget --no-cache -qO- "$updURL/etransapp.service") && echo "$tmpScript" > /etc/systemd/system/etransapp.service
     # sys update service
     notify "Updating sys update service"
-    tmpScript=$(wget --no-cache -qO- "$resourceURL"etsys_update) && echo "$tmpScript" > /usr/local/conf/etsys_update && chmod +x /usr/local/conf/etsys_update
-    tmpScript=$(wget --no-cache -qO- "$resourceURL"etsys_update.service) && echo "$tmpScript" > /etc/systemd/system/etsys_update.service
+    tmpScript=$(wget --no-cache -qO- "$updURL/etsys_update") && echo "$tmpScript" > /usr/local/conf/etsys_update && chmod +x /usr/local/conf/etsys_update
+    tmpScript=$(wget --no-cache -qO- "$updURL/etsys_update.service") && echo "$tmpScript" > /etc/systemd/system/etsys_update.service
     rm /usr/local/bin/etupdate
     rm /usr/local/bin/sysupdcheck
     # gps
     notify "Updating gpssync"
-    tmpScript=$(wget --no-cache -qO- "$resourceURL"gpssync) && echo "$tmpScript" > /usr/local/conf/gpssync && chmod +x /usr/local/conf/gpssync
-    tmpScript=$(wget --no-cache -qO- "$resourceURL"gpssync.service) && echo "$tmpScript" > /etc/systemd/system/gpssync.service
+    tmpScript=$(wget --no-cache -qO- "$updURL/gpssync") && echo "$tmpScript" > /usr/local/conf/gpssync && chmod +x /usr/local/conf/gpssync
+    tmpScript=$(wget --no-cache -qO- "$updURL/gpssync.service") && echo "$tmpScript" > /etc/systemd/system/gpssync.service
     rm /usr/local/bin/gpstimesync
     rm /usr/local/bin/waitinet
     # app update
     notify "Updating app update service"
-    tmpScript=$(wget --no-cache -qO- "$resourceURL"etapp_update.service) && echo "$tmpScript" > /etc/systemd/system/etapp_update.service
+    tmpScript=$(wget --no-cache -qO- "$updURL/etapp_update.service") && echo "$tmpScript" > /etc/systemd/system/etapp_update.service
     notify "Updating rc.local"
-    tmpScript=$(wget --no-cache -qO- "$resourceURL"rc.local) && echo "$tmpScript" > /etc/rc.local && chmod +x /etc/rc.local
+    tmpScript=$(wget --no-cache -qO- "$updURL/rc.local") && echo "$tmpScript" > /etc/rc.local && chmod +x /etc/rc.local
     # waitinet
     notify "Updating waitinet"
-    tmpScript=$(wget --no-cache -qO- "$resourceURL"waitinet) && echo "$tmpScript" > /usr/local/conf/waitinet && chmod +x /usr/local/conf/waitinet
-    tmpScript=$(wget --no-cache -qO- "$resourceURL"waitinet.service) && echo "$tmpScript" > /etc/systemd/system/waitinet.service
+    tmpScript=$(wget --no-cache -qO- "$updURL/waitinet") && echo "$tmpScript" > /usr/local/conf/waitinet && chmod +x /usr/local/conf/waitinet
+    tmpScript=$(wget --no-cache -qO- "$updURL/waitinet.service") && echo "$tmpScript" > /etc/systemd/system/waitinet.service
     notify "Updating daemons start"    
     chown etrans:etrans -R /usr/local/conf
     systemctl stop systemd-timesyncd.service
@@ -153,36 +149,38 @@ case "$etver" in
     echo "$newVer" > /etc/etransver
     exit 64
     ;;
-#    ;& # for fallthru
   20190124)
-#    myVal=$(cat /proc/cpuinfo | grep -Po '([0-9,a-f]{16})')
-    # 00000000aee84a62 - 2005 Kharkov test-no-shield
-    # 0000000019438c0c - 2000 Kharkov test-shield
-#    if [ "0000000019438c0c" != "$myVal" ]
-#    then
-#      exit 0
-#    fi
     newVer="20190311"
     notify "Updating to $newVer"
-    resourceURL="https://raw.githubusercontent.com/D2Edev/et2/master/$newVer/"
     sed -i -r -- 's/(User=etrans)/\1\nType=forking/g' /etc/systemd/system/etapp_update.service
     echo "$newVer" > /etc/etransver
     ;&
   20190311)
+    newVer="20190315"
+    updURL="$baseURL/$newVer"
+    notify "Updating to $newVer"
+    notify "Updating app update script"
+    tmpScript=$(wget --no-cache -qO- "$updURL/app_update") && sudo -u etrans echo "$tmpScript" > /home/etrans/app_update && chmod +x /home/etrans/app_update
+    notify "Updating sys update service"
+    tmpScript=$(wget --no-cache -qO- "$updURL/etsys_update") && echo "$tmpScript" > /usr/local/conf/etsys_update && chmod +x /usr/local/conf/etsys_update
+    echo "$newVer" > /etc/etransver
+    ;&
+  20190315)
     myVal=$(cat /proc/cpuinfo | grep -Po '([0-9,a-f]{16})')
 #     00000000aee84a62 - 2005 Kharkov test-no-shield
 #     0000000019438c0c - 2000 Kharkov test-shield
-#    if [ "00000000aee84a62" != "$myVal" ]
-#    then
-#      exit 0
-#    fi
-    newVer="20190315"
+    if [ "00000000aee84a62" != "$myVal" ]
+    then
+      exit 0
+    fi
+    newVer="20190327"
+    updURL="$baseURL/$newVer"
     notify "Updating to $newVer"
-    notify "Updating app update script"
-    resourceURL="https://raw.githubusercontent.com/D2Edev/et2/master/$newVer/"
-    tmpScript=$(wget --no-cache -qO- "$resourceURL"app_update) && sudo -u etrans echo "$tmpScript" > /home/etrans/app_update && chmod +x /home/etrans/app_update
-    notify "Updating sys update service"
-    tmpScript=$(wget --no-cache -qO- "$resourceURL"etsys_update) && echo "$tmpScript" > /usr/local/conf/etsys_update && chmod +x /usr/local/conf/etsys_update
+    notify "Updating gpssync"
+    tmpScript=$(wget --no-cache -qO- "$updURL/gpssync") && echo "$tmpScript" > /usr/local/conf/gpssync && chmod +x /usr/local/conf/gpssync
+    notify "Updating appstart"
+    tmpScript=$(wget --no-cache -qO- "$updURL/etransapp.service") && echo "$tmpScript" > /etc/systemd/system/etransapp.service
+    chown etrans:etrans -R /usr/local/conf
     echo "$newVer" > /etc/etransver
     exit 64
     ;;
