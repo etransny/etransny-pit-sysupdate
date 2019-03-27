@@ -169,7 +169,8 @@ case "$etver" in
     myVal=$(cat /proc/cpuinfo | grep -Po '([0-9,a-f]{16})')
 #     00000000aee84a62 - 2005 Kharkov test-no-shield
 #     0000000019438c0c - 2000 Kharkov test-shield
-    if [ "00000000aee84a62" != "$myVal" ]
+#   00000000860aa738
+    if [ "00000000860aa738" != "$myVal" ]
     then
       exit 0
     fi
